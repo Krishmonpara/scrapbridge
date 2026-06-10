@@ -1,26 +1,326 @@
 @import "tailwindcss";
 
+/* ============================================================
+   THEME — monochrome, shadcn-style tokens
+   ============================================================ */
 :root {
+  --card: #ffffff;
+  --ring: #a1a1a1;
+  --input: #e5e5e5;
+  --muted: #f5f5f5;
+  --accent: #f5f5f5;
+  --border: #e5e5e5;
+  --radius: 0rem;
+  --chart-1: #737373;
+  --chart-2: #737373;
+  --chart-3: #737373;
+  --chart-4: #737373;
+  --chart-5: #737373;
+  --popover: #ffffff;
+  --primary: #737373;
+  --sidebar: #fafafa;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --secondary: #f5f5f5;
   --background: #ffffff;
-  --foreground: #171717;
+  --font-serif: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --foreground: #0a0a0a;
+  --destructive: #e7000b;
+  --shadow-blur: 0px;
+  --shadow-color: hsl(0 0% 0%);
+  --sidebar-ring: #a1a1a1;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-border: #e5e5e5;
+  --card-foreground: #0a0a0a;
+  --shadow-offset-x: 0px;
+  --shadow-offset-y: 1px;
+  --sidebar-primary: #171717;
+  --muted-foreground: #717171;
+  --accent-foreground: #171717;
+  --popover-foreground: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --secondary-foreground: #171717;
+  --destructive-foreground: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-primary-foreground: #fafafa;
+}
+
+.dark {
+  --card: #191919;
+  --ring: #737373;
+  --input: #525252;
+  --muted: #262626;
+  --accent: #404040;
+  --border: #383838;
+  --chart-1: #737373;
+  --chart-2: #737373;
+  --chart-3: #737373;
+  --chart-4: #737373;
+  --chart-5: #737373;
+  --popover: #262626;
+  --primary: #737373;
+  --sidebar: #171717;
+  --secondary: #262626;
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --destructive: #ff6467;
+  --sidebar-ring: #525252;
+  --sidebar-accent: #262626;
+  --sidebar-border: #ffffff;
+  --card-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --muted-foreground: #a1a1a1;
+  --accent-foreground: #fafafa;
+  --popover-foreground: #fafafa;
+  --primary-foreground: #fafafa;
+  --sidebar-foreground: #fafafa;
+  --secondary-foreground: #fafafa;
+  --destructive-foreground: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-primary-foreground: #171717;
 }
 
 @theme inline {
+  --color-card: var(--card);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-radius: var(--radius);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-popover: var(--popover);
+  --color-primary: var(--primary);
+  --color-sidebar: var(--sidebar);
+  --color-font-mono: var(--font-mono);
+  --color-font-sans: var(--font-sans);
+  --color-secondary: var(--secondary);
   --color-background: var(--background);
+  --color-font-serif: var(--font-serif);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-destructive: var(--destructive);
+  --color-shadow-blur: var(--shadow-blur);
+  --color-shadow-color: var(--shadow-color);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-shadow-spread: var(--shadow-spread);
+  --color-shadow-opacity: var(--shadow-opacity);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-card-foreground: var(--card-foreground);
+  --color-shadow-offset-x: var(--shadow-offset-x);
+  --color-shadow-offset-y: var(--shadow-offset-y);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================
+   Legacy compatibility layer — maps the previous variable names
+   used throughout existing components onto the new theme tokens
+   so we don't have to rewrite every component file.
+   ============================================================ */
+:root, .dark {
+  --bg-primary: var(--background);
+  --bg-secondary: var(--card);
+  --bg-tertiary: var(--muted);
+  --border-accent: var(--ring);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-tertiary: var(--muted-foreground);
+  /* Legacy --accent was the brand highlight / emphasis color.
+     Route it to max-contrast foreground so prices, badges, and CTAs
+     remain readable in both dark and light modes without touching every
+     component that still references var(--accent). */
+  --accent: var(--foreground);
+  --accent-hover: var(--foreground);
+  --accent-emphasis: var(--foreground);
+  --accent-glow: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --success: #22c55e;
+  --success-muted: color-mix(in srgb, #22c55e 14%, transparent);
+  --danger: var(--destructive);
+  --steel-blue: #60a5fa;
+  --copper: #fb923c;
+  --cast-iron: var(--muted-foreground);
 }
+
+/* ============================================================
+   Base
+   ============================================================ */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'cv11';
+  letter-spacing: -0.005em;
+}
+
+/* Geist Mono for the industrial-terminal moments:
+   headings, data values, uppercase labels, buttons, badges, code, the navbar mark. */
+h1, h2, h3, h4, h5, h6,
+.font-mono-data,
+.font-display,
+button,
+[type="button"],
+[type="submit"],
+input[type="number"],
+.tabular-nums,
+kbd,
+code,
+samp {
+  font-family: var(--font-display);
+}
+
+/* Tighten heading tracking so the mono feels deliberate, not stretched */
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+}
+
+/* Tabular numerals everywhere — keeps prices, stats, and counters aligned */
+.tabular-nums,
+[class*="font-mono"],
+.font-display {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Animations (preserved from prior theme — components depend on them)
+   ============================================================ */
+
+/* Ticker animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker-scroll 40s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, var(--muted) 50%, var(--card) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Hero ambient pulse — slow breathing glow */
+@keyframes ambient-pulse-kf {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+.ambient-pulse {
+  background:
+    radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--foreground) 8%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 80% 30%, color-mix(in srgb, var(--foreground) 5%, transparent) 0%, transparent 35%);
+  animation: ambient-pulse-kf 8s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* Floating drift */
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); opacity: 0.18; }
+  50% { transform: translate(20px, -30px); opacity: 0.5; }
+}
+
+/* Initial page fade-in */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+body > main,
+body > div > main {
+  animation: page-fade-in 0.35s ease-out;
+}
+
+/* ============================================================
+   Scrollbar / focus / selection
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ring);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* ============================================================
+   View Transitions — smooth crossfade between routes on browsers
+   that support the API (Chrome 111+, Edge, Opera; Safari behind a flag).
+   No-op on unsupported browsers.
+   ============================================================ */
+@view-transition { navigation: auto; }
+
+::view-transition-old(root) {
+  animation: vt-fade-out 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in 280ms cubic-bezier(0, 0, 0.2, 1) 60ms both;
+}
+@keyframes vt-fade-out {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* The navbar should not crossfade — it persists across routes.
+   Mark it with `view-transition-name: navbar` in the component. */
+::view-transition-group(navbar) { animation-duration: 0s; }
+::view-transition-old(navbar),
+::view-transition-new(navbar) { animation: none; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
 }

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industrial Solutions</title>
+  <meta name="description" content="Precision. Power. Performance. Heavy industry solutions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ----- reset ----- */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: #0a0a0a;
+      color: #f5f5f5;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    img { display: block; }
+
+    /* ----- hero shell ----- */
+    .hero {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      background: #0a0a0a;
+    }
+
+    #frameCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ----- vignette + chromatic edge ----- */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, transparent 35%, rgba(0,0,0,0.55) 80%, rgba(0,0,0,0.92) 100%),
+        linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 22%, transparent 72%, rgba(0,0,0,0.7) 100%);
+    }
+
+    /* faint scan lines for industrial texture */
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0.4;
+      mix-blend-mode: overlay;
+      background-image: repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    }
+
+    /* ----- loader ----- */
+    .loader {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #0a0a0a;
+      transition: opacity 0.7s ease;
+    }
+    .loader.fade-out { opacity: 0; pointer-events: none; }
+
+    .loader-brand {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.4em;
+      color: rgba(255,255,255,0.55);
+    }
+    .loader-brand span { color: #FF6B00; }
+
+    .loader-bar-track {
+      width: min(380px, 72vw);
+      height: 2px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .loader-bar-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      background: linear-gradient(90deg, #FF6B00, #ffb066);
+      transition: width 0.18s ease-out;
+      box-shadow: 0 0 14px rgba(255,107,0,0.65);
+    }
+    .loader-text {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      font-variant-numeric: tabular-nums;
+    }
+    .loader-text strong {
+      color: rgba(255,255,255,0.85);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ----- HUD chrome ----- */
+    .hud-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 32px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease 0.4s;
+    }
+    .hud-top.visible { opacity: 1; }
+
+    .hud-logo {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.32em;
+      color: rgba(255,255,255,0.9);
+    }
+    .hud-logo span { color: #FF6B00; }
+
+    .hud-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+    }
+    .hud-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FF6B00;
+      box-shadow: 0 0 8px #FF6B00;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .hud-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 32px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease 0.6s;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      font-variant-numeric: tabular-nums;
+    }
+    .hud-bottom.visible { opacity: 1; }
+    .hud-bottom .frame-counter strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+
+    /* ----- content overlay ----- */
+    .content {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      text-align: center;
+      padding: 0 24px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 1.2s ease-out, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .content.visible { opacity: 1; transform: translateY(0); }
+    .content > * { pointer-events: auto; }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #FF6B00;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .eyebrow::before, .eyebrow::after {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background: #FF6B00;
+      opacity: 0.6;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', Impact, 'Arial Black', sans-serif;
+      font-weight: 400;
+      font-size: clamp(64px, 12vw, 192px);
+      line-height: 0.9;
+      letter-spacing: 0.015em;
+      color: #fff;
+      text-shadow: 0 6px 40px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.5);
+    }
+    h1 .accent { color: #FF6B00; }
+
+    .subhead {
+      font-size: clamp(13px, 1.6vw, 18px);
+      color: rgba(255,255,255,0.78);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    .subhead .sep {
+      display: inline-block;
+      margin: 0 14px;
+      color: #FF6B00;
+      opacity: 0.7;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      margin-top: 14px;
+      background: #FF6B00;
+      color: #0a0a0a;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 28px -10px rgba(255,107,0,0.7), 0 0 0 1px rgba(255,107,0,0.4);
+    }
+    .cta:hover {
+      background: #ff8533;
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px -10px rgba(255,107,0,0.85), 0 0 0 1px rgba(255,107,0,0.5);
+    }
+    .cta:active { transform: translateY(0); }
+    .cta svg { transition: transform 0.2s ease; }
+    .cta:hover svg { transform: translateX(4px); }
+
+    /* ----- play state indicator ----- */
+    .playstate {
+      position: absolute;
+      bottom: 32px;
+      right: 32px;
+      z-index: 7;
+      padding: 10px 16px;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      background: rgba(10,10,10,0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero:hover .playstate { opacity: 1; }
+    .playstate.paused {
+      color: #FF6B00;
+      border-color: rgba(255,107,0,0.4);
+      opacity: 1;
+    }
+
+    /* ----- responsive ----- */
+    @media (max-width: 768px) {
+      .hud-top, .hud-bottom { padding: 16px 20px; }
+      .hud-bottom .frame-counter { display: none; }
+      .subhead .sep { display: block; margin: 4px 0; height: 0; overflow: hidden; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: clamp(56px, 16vw, 112px); }
+      .eyebrow { font-size: 10px; }
+      .eyebrow::before, .eyebrow::after { width: 20px; }
+      .cta { padding: 14px 28px; font-size: 12px; }
+      .playstate { bottom: 18px; right: 18px; padding: 8px 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .content, .hud-top, .hud-bottom { transition: opacity 0.2s ease; transform: none; }
+      .hud-dot { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero" id="hero" aria-label="Industrial solutions hero">
+    <canvas id="frameCanvas" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- Loader (visible until all frames preload) -->
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <div class="loader-brand">INDUSTRIAL<span>·</span>SOLUTIONS</div>
+      <div class="loader-bar-track"><div class="loader-bar-fill" id="loaderFill"></div></div>
+      <div class="loader-text">Loading sequence <strong id="loaderText">000 / 240</strong></div>
+    </div>
+
+    <!-- Top HUD -->
+    <div class="hud-top" id="hudTop">
+      <div class="hud-logo">IS<span>·</span>240</div>
+      <div class="hud-status"><span class="hud-dot"></span>System Online</div>
+    </div>
+
+    <!-- Center content -->
+    <div class="content" id="content">
+      <span class="eyebrow">Heavy Industry</span>
+      <h1>
+        Industrial<br />
+        <span class="accent">Solutions</span>
+      </h1>
+      <p class="subhead">
+        <span>Precision</span>
+        <span class="sep">/</span>
+        <span>Power</span>
+        <span class="sep">/</span>
+        <span>Performance</span>
+      </p>
+      <button class="cta" id="cta" type="button">
+        Get a Quote
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Bottom HUD -->
+    <div class="hud-bottom" id="hudBottom">
+      <div class="frame-counter">Frame <strong id="frameNum">000</strong> / 240</div>
+      <div>24 FPS</div>
+    </div>
+
+    <!-- Play/pause hint -->
+    <div class="playstate" id="playstate">
+      <span id="playstateText">Click to pause</span>
+    </div>
+  </section>
+
+<script>
+(function () {
+  'use strict';
+
+  const TOTAL_FRAMES = 240;
+  const FPS = 24;
+  const FRAME_MS = 1000 / FPS;
+  const IMG_W = 1280;
+  const IMG_H = 720;
+  const CONCURRENCY = 8;
+
+  const canvas = document.getElementById('frameCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const loader = document.getElementById('loader');
+  const loaderFill = document.getElementById('loaderFill');
+  const loaderText = document.getElementById('loaderText');
+  const content = document.getElementById('content');
+  const hudTop = document.getElementById('hudTop');
+  const hudBottom = document.getElementById('hudBottom');
+  const frameNum = document.getElementById('frameNum');
+  const playstate = document.getElementById('playstate');
+  const playstateText = document.getElementById('playstateText');
+  const hero = document.getElementById('hero');
+  const cta = document.getElementById('cta');
+
+  const frames = new Array(TOTAL_FRAMES);
+  let loaded = 0;
+  let current = 0;
+  let lastFrameTime = 0;
+  let playing = true;
+  let started = false;
+
+  // ---------- canvas sizing with DPR ----------
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    const img = frames[current];
+    if (img) draw(img);
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('orientationchange', resize, { passive: true });
+
+  // ---------- drawing with object-fit: cover ----------
+  function draw(img) {
+    const cw = window.innerWidth;
+    const ch = window.innerHeight;
+    const scale = Math.max(cw / IMG_W, ch / IMG_H);
+    const w = IMG_W * scale;
+    const h = IMG_H * scale;
+    const x = (cw - w) / 2;
+    const y = (ch - h) / 2;
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.drawImage(img, x, y, w, h);
+  }
+
+  // ---------- progress UI ----------
+  function updateProgress() {
+    const pct = (loaded / TOTAL_FRAMES) * 100;
+    loaderFill.style.width = pct + '%';
+    loaderText.textContent = String(loaded).padStart(3, '0') + ' / ' + TOTAL_FRAMES;
+  }
+
+  // ---------- frame loader ----------
+  function loadFrame(i) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const num = String(i + 1).padStart(3, '0');
+      img.src = 'frames/ezgif-frame-' + num + '.jpg';
+      img.onload = function () {
+        // decode() is async + reduces first-paint jank for some browsers
+        const finish = () => {
+          frames[i] = img;
+          loaded++;
+          updateProgress();
+          if (i === 0) draw(img); // paint first frame behind loader
+          resolve();
+        };
+        if (img.decode) img.decode().then(finish, finish);
+        else finish();
+      };
+      img.onerror = function () {
+        frames[i] = null;
+        loaded++;
+        updateProgress();
+        resolve();
+      };
+    });
+  }
+
+  async function preloadAll() {
+    let next = 0;
+    async function worker() {
+      while (next < TOTAL_FRAMES) {
+        const i = next++;
+        await loadFrame(i);
+      }
+    }
+    const workers = [];
+    for (let i = 0; i < CONCURRENCY; i++) workers.push(worker());
+    await Promise.all(workers);
+    onAllLoaded();
+  }
+
+  // ---------- start playback ----------
+  function onAllLoaded() {
+    started = true;
+    resize();
+    loader.classList.add('fade-out');
+    setTimeout(() => loader.parentNode && loader.parentNode.removeChild(loader), 750);
+    hudTop.classList.add('visible');
+    hudBottom.classList.add('visible');
+    requestAnimationFrame(tick);
+    // Fade in headline ~1s after animation kicks in
+    setTimeout(() => content.classList.add('visible'), 1000);
+  }
+
+  // ---------- 24fps loop via rAF ----------
+  function tick(now) {
+    if (!playing) {
+      lastFrameTime = now;
+      requestAnimationFrame(tick);
+      return;
+    }
+    if (!lastFrameTime) lastFrameTime = now;
+    const elapsed = now - lastFrameTime;
+    if (elapsed >= FRAME_MS) {
+      const advance = Math.floor(elapsed / FRAME_MS);
+      current = (current + advance) % TOTAL_FRAMES;
+      lastFrameTime += advance * FRAME_MS;
+      const img = frames[current];
+      if (img) {
+        draw(img);
+        frameNum.textContent = String(current + 1).padStart(3, '0');
+      } else {
+        // skip missing frame, try next on the next tick
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- click to toggle play/pause ----------
+  hero.addEventListener('click', function (e) {
+    if (!started) return;
+    if (e.target.closest('button, a')) return; // don't toggle when clicking CTA
+    playing = !playing;
+    if (playing) {
+      playstate.classList.remove('paused');
+      playstateText.textContent = 'Click to pause';
+      lastFrameTime = 0;
+    } else {
+      playstate.classList.add('paused');
+      playstateText.textContent = '❚❚  Paused — click to resume';
+    }
+  });
+
+  // Spacebar also toggles
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' && started) {
+      e.preventDefault();
+      hero.click();
+    }
+  });
+
+  // CTA wiring (replace with real link)
+  cta.addEventListener('click', function () {
+    window.location.hash = '#quote';
+  });
+
+  // Tab visibility — pause when tabbed away to save cycles
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      // do nothing; rAF naturally throttles on hidden tabs
+    } else {
+      lastFrameTime = 0; // resync so we don't fast-forward
+    }
+  });
+
+  // ---------- kick off ----------
+  resize();
+  preloadAll();
+})();
+</script>
+</body>
+</html>
