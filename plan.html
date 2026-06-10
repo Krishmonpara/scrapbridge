@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScrapBridge — Architecture Plan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;
+  --text:#e8e8e8;--muted:#666;--accent:#fff;
+  --col-client:#3b82f6;--col-middleware:#a855f7;--col-api:#22c55e;
+  --col-db:#f59e0b;--col-auth:#ef4444;--col-cache:#06b6d4;--col-component:#ec4899;
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;overflow:hidden}
+/* LAYOUT */
+#app{display:flex;height:100vh;flex-direction:column}
+#header{padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0}
+#header h1{font-size:15px;font-weight:600;letter-spacing:.01em}
+#header p{font-size:11px;color:var(--muted)}
+#legend{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+#body{display:flex;flex:1;min-height:0}
+#canvas-wrap{flex:1;position:relative;overflow:hidden;cursor:grab}
+#canvas-wrap.grabbing{cursor:grabbing}
+#svg-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+#nodes-layer{position:absolute;top:0;left:0;transform-origin:0 0}
+/* LAYER LABELS */
+.layer-label{position:absolute;right:12px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none;transform:translateY(-50%)}
+/* NODES */
+.node{
+  position:absolute;
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:7px 11px;
+  cursor:pointer;
+  background:var(--surface2);
+  transition:all .15s ease;
+  white-space:nowrap;
+  user-select:none;
+  max-width:180px;
+}
+.node:hover{border-color:currentColor;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.node.active{border-color:currentColor;background:color-mix(in srgb,currentColor 12%,var(--surface2));box-shadow:0 0 0 2px color-mix(in srgb,currentColor 30%,transparent)}
+.node.dimmed{opacity:.2}
+.node-label{font-size:12px;font-weight:500;line-height:1.3}
+.node-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3;white-space:normal}
+.node-badge{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:1px 5px;border-radius:3px;margin-bottom:4px;opacity:.8}
+/* DETAIL PANEL */
+#panel{
+  width:320px;flex-shrink:0;
+  background:var(--surface);
+  border-left:1px solid var(--border);
+  overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+#panel-empty{
+  display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;text-align:center;color:var(--muted);gap:8px
+}
+#panel-empty svg{opacity:.3}
+#panel-content{display:none;flex-direction:column;padding:20px;gap:16px}
+#panel.has-content #panel-empty{display:none}
+#panel.has-content #panel-content{display:flex}
+#panel-close{position:absolute;right:16px;top:16px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1}
+#panel-header{position:relative;padding-right:24px}
+#panel-title{font-size:15px;font-weight:600;margin-bottom:4px}
+#panel-type{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.panel-section{border-top:1px solid var(--border);padding-top:14px}
+.panel-section h3{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.detail-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start}
+.detail-key{font-size:11px;color:var(--muted);min-width:90px;flex-shrink:0;padding-top:1px}
+.detail-val{font-size:12px;line-height:1.5;word-break:break-word}
+.tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;border:1px solid;margin:1px;cursor:pointer;transition:opacity .1s}
+.tag:hover{opacity:.75}
+.conn-list{display:flex;flex-direction:column;gap:4px}
+.conn-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;transition:all .1s;font-size:12px
+}
+.conn-item:hover{border-color:var(--text);background:color-mix(in srgb,var(--text) 5%,var(--surface2))}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.conn-arrow{font-size:10px;color:var(--muted);flex-shrink:0}
+.conn-label{color:var(--muted);font-size:10px;margin-left:auto}
+/* CONTROLS */
+#controls{position:absolute;bottom:16px;left:16px;display:flex;gap:8px;z-index:10}
+.ctrl-btn{padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);cursor:pointer;font-size:12px;transition:border-color .1s}
+.ctrl-btn:hover{border-color:var(--accent)}
+/* EDGES */
+.edge{stroke:var(--border);stroke-width:1.5;fill:none;transition:all .2s}
+.edge.active{stroke-width:2.5;opacity:1}
+.edge.dimmed{opacity:.04}
+.edge-label-bg{fill:var(--surface);rx:3}
+.edge-label-text{fill:var(--muted);font-size:10px;font-family:-apple-system,sans-serif}
+/* MINI HELP */
+#help{position:absolute;bottom:16px;right:16px;font-size:10px;color:var(--muted);text-align:right;line-height:1.7;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect width="22" height="22" rx="4" fill="white"/>
+      <text x="11" y="15" text-anchor="middle" font-size="10" font-weight="700" fill="black" font-family="-apple-system,sans-serif">SB</text>
+    </svg>
+    <div>
+      <h1>ScrapBridge — Architecture</h1>
+      <p>Click any node to explore connections · Scroll to zoom · Drag to pan</p>
+    </div>
+    <div id="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-client)"></span>Pages</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-component)"></span>Components</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-middleware)"></span>Middleware</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-api)"></span>API Routes</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-cache)"></span>Cache</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-auth)"></span>Auth</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--col-db)"></span>Database</span>
+    </div>
+  </div>
+  <div id="body">
+    <div id="canvas-wrap">
+      <svg id="svg-layer"><defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#3a3a3a"/></marker><marker id="arrow-active" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="currentColor"/></marker></defs></svg>
+      <div id="nodes-layer"></div>
+      <div id="controls">
+        <button class="ctrl-btn" id="btn-fit">⊡ Fit</button>
+        <button class="ctrl-btn" id="btn-reset">↺ Reset</button>
+        <button class="ctrl-btn" id="btn-zoom-in">＋</button>
+        <button class="ctrl-btn" id="btn-zoom-out">－</button>
+      </div>
+      <div id="help">Click a node to inspect · Esc to clear</div>
+    </div>
+    <div id="panel">
+      <div id="panel-empty">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="currentColor"/></svg>
+        <div style="font-size:13px;color:#888">Select any node</div>
+        <div style="font-size:11px">See connections, schemas,<br>and implementation details</div>
+      </div>
+      <div id="panel-content">
+        <div id="panel-header">
+          <div id="panel-type"></div>
+          <div id="panel-title"></div>
+          <button id="panel-close" onclick="clearSelection()">×</button>
+        </div>
+        <div id="panel-desc" class="panel-section" style="border-top:none;padding-top:0"></div>
+        <div id="panel-details" class="panel-section"></div>
+        <div id="panel-connections" class="panel-section"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const COLORS = {
+  client:'#3b82f6', component:'#ec4899', middleware:'#a855f7',
+  api:'#22c55e', cache:'#06b6d4', auth:'#ef4444', db:'#f59e0b'
+};
+
+// Nodes: id, label, sub, type, x, y, details{}, connections[]
+const NODES = [
+  // ── CLIENT PAGES ─────────────────────────────────────────────────────
+  {id:'pg-splash', label:'/ (Splash)', sub:'FrameAnimationHero · 240 frames', type:'client', x:40, y:60,
+   details:{route:'/', component:'FrameAnimationHero', pattern:'Session-gated splash screen. sessionStorage flag prevents replay.', cache:'no-cache (CSR only)'},
+   connections:[{to:'pg-home',label:'redirect after animation'}]},
+
+  {id:'pg-home', label:'/home', sub:'HeroSection · Listings · Ticker', type:'client', x:240, y:60,
+   details:{route:'/home', dataFetch:'Server component · Prisma direct', cache:'force-dynamic (SSR on every req)'},
+   connections:[{to:'api-listings',label:'GET featured+recent'},{to:'comp-hero',label:'renders'},{to:'comp-listingcard',label:'renders featured'}]},
+
+  {id:'pg-browse', label:'/browse', sub:'BrowseClient · filters · chips', type:'client', x:440, y:60,
+   details:{route:'/browse', pattern:'Suspense boundary → BrowseClient (CSR). URL search params mirror filter state.', queryParams:'search,category,type,state,verified,sort'},
+   connections:[{to:'api-listings',label:'GET on filter change'},{to:'comp-filters',label:'renders'},{to:'comp-listinggrid',label:'renders results'}]},
+
+  {id:'pg-listing', label:'/listing/[id]', sub:'Detail · gallery · inquiry form', type:'client', x:640, y:60,
+   details:{route:'/listing/[id]', cache:'force-dynamic', pattern:'Server component. Prisma query for listing + company. Related listings carousel from same category.'},
+   connections:[{to:'api-inquiry',label:'POST inquiry'},{to:'api-listings',label:'GET related'},{to:'comp-carousel',label:'renders related'}]},
+
+  {id:'pg-companies', label:'/companies', sub:'Directory · filter sidebar', type:'client', x:840, y:60,
+   details:{route:'/companies', cache:'force-dynamic', pattern:'Server component with URL-driven filters. Native HTML form → GET params.'},
+   connections:[{to:'api-companies',label:'GET company list'}]},
+
+  {id:'pg-company', label:'/company/[id]', sub:'Profile · active listings grid', type:'client', x:1040, y:60,
+   details:{route:'/company/[id]', cache:'force-dynamic'},
+   connections:[{to:'api-companies',label:'GET company'},{to:'comp-listingcard',label:'renders listings'}]},
+
+  {id:'pg-rfq', label:'/rfq', sub:'Post a Request for Quote', type:'client', x:1240, y:60,
+   details:{route:'/rfq', pattern:'Client form. Submits to API. No auth required.'},
+   connections:[{to:'api-rfq',label:'POST rfq'},{to:'mw-proxy',label:'unprotected route'}]},
+
+  // ── AUTH PAGES ───────────────────────────────────────────────────────
+  {id:'pg-login', label:'/login', sub:'Credentials + Google OAuth', type:'client', x:40, y:180,
+   details:{route:'/login', pattern:'next-auth/react signIn(). Zod validation. Redirects to /dashboard on success.'},
+   connections:[{to:'auth-nextauth',label:'signIn()'},{to:'mw-proxy',label:'redirect if already authed'}]},
+
+  {id:'pg-register', label:'/register', sub:'Creates User + Company', type:'client', x:240, y:180,
+   details:{route:'/register', pattern:'POST /api/register → auto signIn → /dashboard'},
+   connections:[{to:'api-register',label:'POST register'},{to:'auth-nextauth',label:'signIn() after register'}]},
+
+  // ── DASHBOARD PAGES ──────────────────────────────────────────────────
+  {id:'pg-dashboard', label:'/dashboard', sub:'Stats · listings · inquiries · RFQs', type:'client', x:440, y:180,
+   details:{route:'/dashboard', auth:'Required — middleware redirects to /login', cache:'force-dynamic', pattern:'Server component. Demo: shows first company data. Prod: filter by session.companyId.'},
+   connections:[{to:'mw-proxy',label:'protected'},{to:'db-company',label:'findFirst'},{to:'db-listing',label:'findMany (owner)'},{to:'db-inquiry',label:'findMany (received)'},{to:'db-rfq',label:'findMany (open)'}]},
+
+  {id:'pg-mylistings', label:'/my-listings', sub:'DataTable · status · stats', type:'client', x:640, y:180,
+   details:{route:'/my-listings', auth:'Required'},
+   connections:[{to:'mw-proxy',label:'protected'},{to:'db-listing',label:'findMany (company)'}]},
+
+  {id:'pg-postlisting', label:'/post-listing', sub:'6-step wizard · Zod validation', type:'client', x:840, y:180,
+   details:{route:'/post-listing', auth:'Required', steps:'Type & Category → Material Details → Quantity & Price → Location → Photos & Desc → Review & Submit', validation:'Per-step Zod; inline error messages'},
+   connections:[{to:'mw-proxy',label:'protected'},{to:'api-listings',label:'POST on submit'},{to:'api-companies',label:'GET demo companyId'}]},
+
+  {id:'pg-inquiries', label:'/inquiries', sub:'Received + Sent · reply links', type:'client', x:1040, y:180,
+   details:{route:'/inquiries', auth:'Required'},
+   connections:[{to:'mw-proxy',label:'protected'},{to:'db-inquiry',label:'findMany (from/to)'}]},
+
+  {id:'pg-settings', label:'/settings', sub:'Profile · Company · Notifications · Security', type:'client', x:1240, y:180,
+   details:{route:'/settings', auth:'Required', sections:'Profile, Company (verification CTA), Notifications, Security (password)'},
+   connections:[{to:'mw-proxy',label:'protected'}]},
+
+  // ── KEY COMPONENTS ───────────────────────────────────────────────────
+  {id:'comp-hero', label:'HeroSection', sub:'Search bar · quick filters · CTA', type:'component', x:40, y:320,
+   details:{file:'components/hero/HeroSection.tsx', pattern:'CSS .animate-hero for SSR-safe fade-in. No framer-motion (avoids opacity:0 SSR injection). Particles via inline style array.'},
+   connections:[{to:'pg-browse',label:'search → navigate'}]},
+
+  {id:'comp-listingcard', label:'ListingCard', sub:'Photo · price · company · stats', type:'component', x:240, y:320,
+   details:{file:'components/listings/ListingCard.tsx', pattern:'framer-motion whileHover:-3px. ImageWithShimmer with fallback. Displays: listingType badge, condition badge, price, freshness tag, view/inquiry counts.'},
+   connections:[{to:'pg-listing',label:'links to detail'}]},
+
+  {id:'comp-listinggrid', label:'ListingGrid', sub:'Staggered framer-motion grid', type:'component', x:440, y:320,
+   details:{file:'components/listings/ListingGrid.tsx', pattern:'container/item Variants. Key = listing IDs joined → re-triggers stagger on filter change. Empty state with PackageSearch icon.'},
+   connections:[{to:'comp-listingcard',label:'renders N×'}]},
+
+  {id:'comp-filters', label:'ListingFilters', sub:'Sidebar with collapsible sections', type:'component', x:640, y:320,
+   details:{file:'components/listings/ListingFilters.tsx', pattern:'Controlled by BrowseClient. Sections: Type (chips), Category (checkboxes), Condition (checkboxes), Location (select), Seller Status, Posted Within.'},
+   connections:[]},
+
+  {id:'comp-carousel', label:'RelatedListingsCarousel', sub:'Snap scroll · nav arrows · fade edges', type:'component', x:840, y:320,
+   details:{file:'components/listings/RelatedListingsCarousel.tsx', pattern:'useRef + ResizeObserver for scroll state. scrollBy smooth. Fade-mask overlay. scroll-snap-align: start on cards. Card: 220px, 96px image strip.'},
+   connections:[{to:'pg-listing',label:'links to related'}]},
+
+  {id:'comp-hscroll', label:'HorizontalScroll', sub:'Generic carousel wrapper', type:'component', x:1040, y:320,
+   details:{file:'components/ui/HorizontalScroll.tsx', pattern:'Reusable. Accepts any children. Floating ±arrows appear only when scrollable. Used on home page Featured Listings with ListingCard children.'},
+   connections:[]},
+
+  {id:'comp-commandpalette', label:'CommandPalette', sub:'⌘K global search', type:'component', x:1240, y:320,
+   details:{file:'components/ui/CommandPalette.tsx', pattern:'Keyboard shortcut ⌘K. Debounced fetch to /api/search. AnimatePresence slide-in. Groups: listings + companies.'},
+   connections:[{to:'api-search',label:'GET ?q='}]},
+
+  // ── MIDDLEWARE ───────────────────────────────────────────────────────
+  {id:'mw-proxy', label:'proxy.ts (Middleware)', sub:'Auth guard on protected routes', type:'middleware', x:340, y:470,
+   details:{
+     file:'proxy.ts',
+     protectedRoutes:'/dashboard, /my-listings, /post-listing, /settings, /inquiries',
+     logic:'getToken({ req, secret: AUTH_SECRET }) → if !token, redirect to /login?callbackUrl=pathname',
+     matcher:'All routes except _next/static, _next/image, favicon.ico, api/',
+     rateLimit:'⚠ Not yet implemented — add @upstash/ratelimit before production'
+   },
+   connections:[{to:'auth-nextauth',label:'getToken()'},{to:'pg-login',label:'redirect if unauthed'}]},
+
+  // ── API ROUTES ───────────────────────────────────────────────────────
+  {id:'api-listings', label:'GET /api/listings', sub:'Paginated · 10 filters · sorted', type:'api', x:40, y:590,
+   details:{
+     file:'app/api/listings/route.ts',
+     method:'GET',
+     params:'search (FTS), category, type, state, verified, within (24h/7d/30d), sort (5 options), condition (multi), page, limit',
+     joins:'Listing + Company (name, verificationStatus, slug)',
+     response:'{ listings[], total, page, limit }',
+     caching:'No cache — always live'
+   },
+   connections:[{to:'db-listing',label:'findMany + count'},{to:'db-company',label:'select join'}]},
+
+  {id:'api-listings-post', label:'POST /api/listings', sub:'Create listing · auth required', type:'api', x:240, y:590,
+   details:{
+     file:'app/api/listings/route.ts',
+     method:'POST',
+     body:'Full Listing object (companyId, listingType, title, materialCategory, condition, quantity, unit, city, state, ...)',
+     response:'Created listing (201)',
+     auth:'Session required (enforced by calling component)'
+   },
+   connections:[{to:'db-listing',label:'create'}]},
+
+  {id:'api-inquiry', label:'POST /api/listings/inquiry', sub:'Send inquiry on a listing', type:'api', x:440, y:590,
+   details:{
+     file:'app/api/listings/inquiry/route.ts',
+     method:'POST',
+     body:'{ listingId, toCompanyId, fromCompanyId, message, contactEmail, contactPhone?, quantity? }',
+     response:'Created inquiry (201)',
+     sideEffect:'listing.inquiryCount++  (atomic increment)'
+   },
+   connections:[{to:'db-inquiry',label:'create'},{to:'db-listing',label:'update inquiryCount'}]},
+
+  {id:'api-companies', label:'GET /api/companies', sub:'Company search · 4 filters', type:'api', x:640, y:590,
+   details:{
+     file:'app/api/companies/route.ts',
+     method:'GET',
+     params:'search (name/desc FTS), type (BusinessType), verified (bool), state',
+     joins:'_count: { listings: true }',
+     orderBy:'rating desc'
+   },
+   connections:[{to:'db-company',label:'findMany'}]},
+
+  {id:'api-rfq', label:'GET+POST /api/rfq', sub:'Open RFQs · public post', type:'api', x:840, y:590,
+   details:{
+     file:'app/api/rfq/route.ts',
+     methods:'GET: all open RFQs (optional ?category filter). POST: create RFQ (public, no auth).',
+     body:'{ title, materialCategory, quantityNeeded, unit, targetPrice?, deliveryLocation?, description }'
+   },
+   connections:[{to:'db-rfq',label:'findMany / create'}]},
+
+  {id:'api-search', label:'GET /api/search', sub:'⌘K autocomplete · 2 entity types', type:'api', x:1040, y:590,
+   details:{
+     file:'app/api/search/route.ts',
+     method:'GET',
+     params:'q (min 2 chars)',
+     response:'{ listings: Listing[], companies: Company[] }',
+     pattern:'Parallel Prisma queries. Listings: title contains. Companies: name contains.'
+   },
+   connections:[{to:'db-listing',label:'findMany (title ~= q)'},{to:'db-company',label:'findMany (name ~= q)'}]},
+
+  {id:'api-register', label:'POST /api/register', sub:'Create User + Company atomically', type:'api', x:1240, y:590,
+   details:{
+     file:'app/api/register/route.ts',
+     method:'POST',
+     body:'{ name, email, password, company, businessType }',
+     logic:'1. Check email unique. 2. bcrypt.hash(password, 12). 3. prisma.company.create (slug = name + 4-char random). 4. prisma.user.create (with companyId).',
+     response:'{ id, email } (201)'
+   },
+   connections:[{to:'db-user',label:'findUnique + create'},{to:'db-company',label:'create'}]},
+
+  // ── CACHE ─────────────────────────────────────────────────────────────
+  {id:'cache-next', label:'Next.js Data Cache', sub:'React cache · force-dynamic pages', type:'cache', x:200, y:730,
+   details:{
+     strategy:'force-dynamic on all pages with DB queries. No static generation. No stale-while-revalidate configured yet.',
+     keys:'Implicit per route. No explicit cache() or unstable_cache() calls yet.',
+     invalidation:'N/A — all reads are live Prisma queries',
+     opportunity:'Add unstable_cache() for /browse listings (5s TTL) and /companies (30s TTL) for faster responses'
+   },
+   connections:[]},
+
+  {id:'cache-session', label:'JWT Session Cache', sub:'NextAuth · HTTP-only cookie', type:'cache', x:500, y:730,
+   details:{
+     storage:'Signed JWT in __Secure-next-auth.session-token cookie (HTTP-only, SameSite=lax)',
+     payload:'{ id, name, email, image, companyId }',
+     expiry:'Default 30 days',
+     invalidation:'signOut() clears cookie. No server-side session store (stateless JWT).'
+   },
+   connections:[{to:'auth-nextauth',label:'issued by'}]},
+
+  // ── AUTH ─────────────────────────────────────────────────────────────
+  {id:'auth-nextauth', label:'NextAuth v5', sub:'Credentials + Google · JWT strategy', type:'auth', x:800, y:730,
+   details:{
+     file:'lib/auth.ts',
+     providers:'Credentials (email + bcrypt) · Google OAuth',
+     strategy:'JWT (stateless — no DB session lookup on every request)',
+     callbacks:'jwt: embeds companyId. session: exposes user.id + user.companyId.',
+     pages:'/login (signIn) · /register (newUser)',
+     adapter:'PrismaAdapter (syncs Account/Session/User tables for Google OAuth)'
+   },
+   connections:[{to:'db-user',label:'findUnique (authorize)'},{to:'db-account',label:'Google OAuth sync'},{to:'db-session',label:'adapter writes'}]},
+
+  // ── DATABASE ─────────────────────────────────────────────────────────
+  {id:'db-listing', label:'Listing', sub:'id · companyId · type · category · price · qty', type:'db', x:40, y:870,
+   details:{
+     table:'Listing',
+     keyFields:'id (cuid), companyId, listingType, title, materialCategory, condition, quantity, unit, pricePerUnit, city, state, status (ACTIVE|SOLD|EXPIRED|DRAFT)',
+     indexes:'companyId, materialCategory, status, createdAt',
+     counters:'viewCount, inquiryCount (atomic increments)',
+     relations:'→ Company, → Inquiry[]'
+   },
+   connections:[]},
+
+  {id:'db-company', label:'Company', sub:'id · slug · businessType · rating', type:'db', x:280, y:870,
+   details:{
+     table:'Company',
+     keyFields:'id (cuid), name, slug (unique), businessType, verificationStatus, city, state, email, rating, reviewCount',
+     relations:'→ User[], → Listing[], → Inquiry[], → RFQ[], → Review[], → SavedSearch[]'
+   },
+   connections:[]},
+
+  {id:'db-inquiry', label:'Inquiry', sub:'listingId · from/to company · message', type:'db', x:520, y:870,
+   details:{
+     table:'Inquiry',
+     keyFields:'id, listingId, fromCompanyId, toCompanyId, message, contactEmail, status (PENDING|RESPONDED|CLOSED)',
+     relations:'→ Listing, → Company (from), → Company (to)'
+   },
+   connections:[]},
+
+  {id:'db-rfq', label:'RFQ', sub:'title · category · qty · description', type:'db', x:760, y:870,
+   details:{
+     table:'RFQ',
+     keyFields:'id, companyId, title, materialCategory, quantityNeeded, unit, targetPrice, deliveryLocation, description, status (OPEN|CLOSED)'
+   },
+   connections:[]},
+
+  {id:'db-user', label:'User', sub:'id · email · password (bcrypt) · companyId', type:'db', x:1000, y:870,
+   details:{
+     table:'User',
+     keyFields:'id (cuid), name, email (unique), password (bcrypt-12), image, companyId',
+     note:'Password is null for Google OAuth users (Account table used instead)'
+   },
+   connections:[]},
+
+  {id:'db-account', label:'Account', sub:'NextAuth OAuth accounts', type:'db', x:1200, y:870,
+   details:{
+     table:'Account (NextAuth)',
+     keyFields:'userId, type, provider, providerAccountId, access_token, refresh_token',
+     note:'Created by PrismaAdapter on first Google sign-in'
+   },
+   connections:[]},
+
+  {id:'db-session', label:'Session', sub:'NextAuth DB sessions (OAuth)', type:'db', x:1380, y:870,
+   details:{
+     table:'Session (NextAuth)',
+     note:'Only used with Google OAuth + adapter. Credentials strategy is stateless JWT — no DB sessions.'
+   },
+   connections:[]},
+];
+
+// Build id → node index map
+const nodeMap = {};
+NODES.forEach((n, i) => { nodeMap[n.id] = i; });
+
+// ─── RENDER NODES ─────────────────────────────────────────────────────────
+const BADGE_LABELS = {
+  client:'Page', component:'Component', middleware:'Middleware',
+  api:'API', cache:'Cache', auth:'Auth', db:'DB Table'
+};
+const layer = document.getElementById('nodes-layer');
+NODES.forEach(n => {
+  const el = document.createElement('div');
+  el.className = 'node';
+  el.dataset.id = n.id;
+  el.style.color = COLORS[n.type];
+  el.style.left = n.x + 'px';
+  el.style.top = n.y + 'px';
+  const badge = `<div class="node-badge" style="background:color-mix(in srgb,${COLORS[n.type]} 15%,transparent);color:${COLORS[n.type]};border:1px solid color-mix(in srgb,${COLORS[n.type]} 30%,transparent)">${BADGE_LABELS[n.type]}</div>`;
+  el.innerHTML = `${badge}<div class="node-label">${n.label}</div>${n.sub ? `<div class="node-sub">${n.sub}</div>` : ''}`;
+  el.addEventListener('click', e => { e.stopPropagation(); selectNode(n.id); });
+  layer.appendChild(el);
+});
+
+// ─── CANVAS PAN + ZOOM ─────────────────────────────────────────────────────
+const wrap = document.getElementById('canvas-wrap');
+const svg = document.getElementById('svg-layer');
+let tx = 60, ty = 40, scale = 0.72;
+let dragging = false, lastX, lastY;
+
+function applyTransform() {
+  layer.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  // SVG needs same transform applied differently
+  redrawEdges();
+}
+
+wrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.node')) return;
+  dragging = true; wrap.classList.add('grabbing');
+  lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  tx += e.clientX - lastX; ty += e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => { dragging = false; wrap.classList.remove('grabbing'); });
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = wrap.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const factor = e.deltaY < 0 ? 1.1 : 0.91;
+  const newScale = Math.max(0.2, Math.min(2.5, scale * factor));
+  tx = mx - (mx - tx) * (newScale / scale);
+  ty = my - (my - ty) * (newScale / scale);
+  scale = newScale;
+  applyTransform();
+}, {passive:false});
+
+document.getElementById('btn-fit').onclick = fitAll;
+document.getElementById('btn-reset').onclick = () => { tx=60;ty=40;scale=0.72;applyTransform(); };
+document.getElementById('btn-zoom-in').onclick = () => { scale=Math.min(2.5,scale*1.2);applyTransform(); };
+document.getElementById('btn-zoom-out').onclick = () => { scale=Math.max(0.2,scale/1.2);applyTransform(); };
+
+function fitAll() {
+  const rect = wrap.getBoundingClientRect();
+  const maxX = Math.max(...NODES.map(n=>n.x))+200;
+  const maxY = Math.max(...NODES.map(n=>n.y))+80;
+  const sx = (rect.width-80)/maxX, sy = (rect.height-80)/maxY;
+  scale = Math.min(sx,sy,1);
+  tx = 40; ty = 40;
+  applyTransform();
+}
+
+// ─── EDGE DRAWING ─────────────────────────────────────────────────────────
+let activeNodeId = null;
+
+function getNodeCenter(id) {
+  const el = layer.querySelector(`[data-id="${id}"]`);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const wr = wrap.getBoundingClientRect();
+  return {
+    x: (r.left + r.width/2 - wr.left - tx) / scale,
+    y: (r.top + r.height/2 - wr.top - ty) / scale
+  };
+}
+
+function redrawEdges() {
+  // Remove existing edges
+  svg.querySelectorAll('.edge-g').forEach(e=>e.remove());
+  const svgRect = svg.getBoundingClientRect();
+
+  NODES.forEach(src => {
+    (src.connections||[]).forEach(conn => {
+      const tgt = NODES[nodeMap[conn.to]];
+      if (!tgt) return;
+
+      const srcEl = layer.querySelector(`[data-id="${src.id}"]`);
+      const tgtEl = layer.querySelector(`[data-id="${conn.to}"]`);
+      if (!srcEl || !tgtEl) return;
+
+      const sr = srcEl.getBoundingClientRect();
+      const tr = tgtEl.getBoundingClientRect();
+      const wl = wrap.getBoundingClientRect().left;
+      const wt = wrap.getBoundingClientRect().top;
+
+      // Source: bottom center, Target: top center
+      const x1 = (sr.left + sr.width/2 - wl);
+      const y1 = (sr.bottom - wt);
+      const x2 = (tr.left + tr.width/2 - wl);
+      const y2 = (tr.top - wt);
+
+      const dy = Math.abs(y2-y1);
+      const dx = (x2-x1);
+      const cy = Math.min(dy*0.4, 60);
+
+      const d = `M${x1},${y1} C${x1},${y1+cy} ${x2},${y2-cy} ${x2},${y2}`;
+
+      const isActive = activeNodeId && (src.id===activeNodeId || conn.to===activeNodeId);
+      const isDimmed = activeNodeId && !isActive;
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.classList.add('edge-g');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', d);
+      path.classList.add('edge');
+      if (isActive) {
+        const srcColor = COLORS[src.type];
+        path.style.stroke = srcColor;
+        path.classList.add('active');
+      }
+      if (isDimmed) path.classList.add('dimmed');
+      path.setAttribute('marker-end','url(#arrow)');
+      g.appendChild(path);
+
+      // Edge label (midpoint)
+      if (conn.label && isActive) {
+        const mx = (x1+x2)/2 + dx*0.05;
+        const my = (y1+y2)/2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        bg.setAttribute('x',mx-30); bg.setAttribute('y',my-8);
+        bg.setAttribute('width',60); bg.setAttribute('height',14);
+        bg.setAttribute('rx',3); bg.setAttribute('fill','#141414');
+        g.appendChild(bg);
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x',mx); txt.setAttribute('y',my+2);
+        txt.setAttribute('text-anchor','middle');
+        txt.setAttribute('fill','#888');
+        txt.setAttribute('font-size','9');
+        txt.setAttribute('font-family','-apple-system,sans-serif');
+        txt.textContent = conn.label.length>20 ? conn.label.slice(0,18)+'…' : conn.label;
+        g.appendChild(txt);
+      }
+
+      svg.appendChild(g);
+    });
+  });
+}
+
+// Redraw on resize
+window.addEventListener('resize', redrawEdges);
+
+// ─── SELECTION ────────────────────────────────────────────────────────────
+function selectNode(id) {
+  activeNodeId = id;
+  const node = NODES[nodeMap[id]];
+
+  // Update node classes
+  layer.querySelectorAll('.node').forEach(el => {
+    const nid = el.dataset.id;
+    const connected = (node.connections||[]).some(c=>c.to===nid) ||
+      NODES.some(n => n.id===nid && (n.connections||[]).some(c=>c.to===id));
+    el.classList.remove('active','dimmed');
+    if (nid===id) el.classList.add('active');
+    else if (!connected) el.classList.add('dimmed');
+  });
+
+  redrawEdges();
+  renderPanel(node);
+}
+
+function clearSelection() {
+  activeNodeId = null;
+  layer.querySelectorAll('.node').forEach(el => el.classList.remove('active','dimmed'));
+  redrawEdges();
+  document.getElementById('panel').classList.remove('has-content');
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') clearSelection(); });
+wrap.addEventListener('click', clearSelection);
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────
+function renderPanel(node) {
+  const panel = document.getElementById('panel');
+  panel.classList.add('has-content');
+
+  document.getElementById('panel-type').style.color = COLORS[node.type];
+  document.getElementById('panel-type').textContent = BADGE_LABELS[node.type].toUpperCase();
+  document.getElementById('panel-title').textContent = node.label;
+
+  // Description / sub
+  const descEl = document.getElementById('panel-desc');
+  descEl.innerHTML = node.sub ? `<p style="color:#aaa;font-size:12px">${node.sub}</p>` : '';
+
+  // Details
+  const detailsEl = document.getElementById('panel-details');
+  const d = node.details || {};
+  const rows = Object.entries(d).map(([k,v]) => {
+    const label = k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase());
+    return `<div class="detail-row"><span class="detail-key">${label}</span><span class="detail-val" style="color:#d4d4d4">${v}</span></div>`;
+  }).join('');
+  detailsEl.innerHTML = rows ? `<h3>Details</h3>${rows}` : '';
+
+  // Connections (outgoing)
+  const conns = node.connections || [];
+  // Also find nodes that connect TO this node (incoming)
+  const incoming = NODES.filter(n => (n.connections||[]).some(c=>c.to===node.id));
+
+  const connEl = document.getElementById('panel-connections');
+  let html = '';
+  if (conns.length > 0) {
+    html += `<h3>Calls / Connects To</h3><div class="conn-list">`;
+    conns.forEach(c => {
+      const tgt = NODES[nodeMap[c.to]];
+      if (!tgt) return;
+      html += `<div class="conn-item" onclick="selectNode('${tgt.id}')">
+        <span class="conn-dot" style="background:${COLORS[tgt.type]}"></span>
+        <span>${tgt.label}</span>
+        <span class="conn-label">${c.label||''}</span>
+        <span class="conn-arrow">→</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  if (incoming.length > 0) {
+    html += `<h3 style="margin-top:14px">Called / Used By</h3><div class="conn-list">`;
+    incoming.forEach(src => {
+      const rel = (src.connections||[]).find(c=>c.to===node.id);
+      html += `<div class="conn-item" onclick="selectNode('${src.id}')">
+        <span class="conn-dot" style="background:${COLORS[src.type]}"></span>
+        <span>${src.label}</span>
+        <span class="conn-label">${rel?.label||''}</span>
+        <span class="conn-arrow">←</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  connEl.innerHTML = html || '<p style="color:#666;font-size:11px">No connections mapped</p>';
+}
+
+// ─── LAYER LABELS ─────────────────────────────────────────────────────────
+function addLayerLabel(text, y) {
+  const el = document.createElement('div');
+  el.className = 'layer-label';
+  el.textContent = text;
+  el.style.top = (y + 20) + 'px';
+  layer.appendChild(el);
+}
+addLayerLabel('CLIENT PAGES', 80);
+addLayerLabel('DASHBOARD', 200);
+addLayerLabel('UI COMPONENTS', 340);
+addLayerLabel('MIDDLEWARE', 490);
+addLayerLabel('API ROUTES', 610);
+addLayerLabel('CACHE / AUTH', 750);
+addLayerLabel('DATABASE', 890);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+requestAnimationFrame(() => {
+  fitAll();
+  redrawEdges();
+});
+</script>
+</body>
+</html>
