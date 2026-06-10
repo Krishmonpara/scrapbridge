@@ -7,7 +7,6 @@ import { signIn } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 
@@ -85,12 +84,7 @@ export default function RegisterPage() {
           backgroundSize: '60px 60px',
         }}
       />
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md relative z-10"
-      >
+      <div className="animate-hero w-full max-w-md relative z-10" style={{ animationDuration: '0.3s' }}>
         <Link href="/home" className="flex items-center gap-2 mb-8">
           <span
             className="w-8 h-8 rounded flex items-center justify-center text-white font-bold text-sm"
@@ -198,7 +192,7 @@ export default function RegisterPage() {
             Sign in
           </Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 
@@ -68,12 +67,7 @@ export default function LoginPage() {
         }}
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-sm relative z-10"
-      >
+      <div className="animate-hero w-full max-w-sm relative z-10" style={{ animationDuration: '0.3s' }}>
         {/* Logo */}
         <Link href="/home" className="flex items-center gap-2 mb-8">
           <span
@@ -145,7 +139,7 @@ export default function LoginPage() {
             Register free
           </Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 import { Navbar } from '@/components/navigation/Navbar'
 import { Input } from '@/components/ui/Input'
@@ -70,11 +69,9 @@ export default function RFQPage() {
             Describe what you need and verified suppliers will contact you directly with quotes.
           </p>
 
-          <motion.form
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+          <form
             onSubmit={handleSubmit(onSubmit)}
-            className="p-6 rounded flex flex-col gap-5"
+            className="animate-hero p-6 rounded flex flex-col gap-5"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
           >
             <Input
@@ -156,7 +153,7 @@ export default function RFQPage() {
             <Button type="submit" loading={isSubmitting} size="lg" className="mt-2">
               Submit RFQ
             </Button>
-          </motion.form>
+          </form>
         </div>
       </div>
     </>

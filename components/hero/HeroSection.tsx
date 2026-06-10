@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Search, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
@@ -103,12 +102,7 @@ export function HeroSection() {
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center pt-16">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="flex flex-col items-center gap-6 max-w-4xl mx-auto"
-        >
+        <div className="animate-hero flex flex-col items-center gap-6 max-w-4xl mx-auto">
           {/* Label */}
           <span
             className="text-xs font-bold tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm"
@@ -192,7 +186,7 @@ export function HeroSection() {
               <Link href="/post-listing">Post Free Listing</Link>
             </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )
