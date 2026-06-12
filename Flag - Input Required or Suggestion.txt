@@ -48,7 +48,17 @@ each item lists what was stubbed/defaulted so nothing is blocked.
     GitHub (https://github.com/Krishmonpara/scrapbridge) is currently the
     only safe copy of this project. Push after every work session.
 
+[8] .ENV WAS RECONSTRUCTED (secrets regenerated)
+    The original .env was destroyed by the disk corruption (it is gitignored,
+    so there was no GitHub copy). It was rebuilt with:
+    - DATABASE_URL from docker-compose.yml (scrapbridge/scrapbridge@localhost:5433)
+    - Fresh AUTH_SECRET/NEXTAUTH_SECRET (all existing login sessions invalidated)
+    If you had anything else in .env (API keys etc.), re-add it.
+    Suggestion: keep a copy of .env in a password manager since it can't
+    live on GitHub.
+
 STATUS LOG
 ----------
 2026-06-12: File created. Items 1-6 non-blocking; work continued.
 2026-06-12: Disk corruption event — full recovery from GitHub completed.
+2026-06-12: .env destroyed by disk + reconstructed (item 8).
