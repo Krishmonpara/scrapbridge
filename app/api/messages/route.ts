@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 // GET /api/messages?inquiryId=...        → full thread for one inquiry
 // GET /api/messages?companyId=...        → all threads (inquiries) with last message + unread count
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/messages { inquiryId, senderCompanyId, body }
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, 'messages-post', { limit: 30, windowMs: 60_000 })
+  if (limited) return limited
+
   try {
     const { inquiryId, senderCompanyId, body } = await request.json()
 

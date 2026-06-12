@@ -430,7 +430,7 @@ The `docker-compose.yml` includes Postgres. Add a Node.js service pointing at th
 - **No real-time** — inquiry notifications are not yet wired to email/websocket; dashboard refreshes on manual reload
 - **Google OAuth** — requires adding `http://localhost:3000/api/auth/callback/google` as an authorised redirect URI in Google Cloud Console
 - **Photo upload** — the drag-drop UI is a placeholder; no S3/blob integration yet (listings fall back to deterministic Flickr thumbnails)
-- **No rate limiting** — the middleware guards routes by auth but has no per-IP request throttle; add `@upstash/ratelimit` before production
+- **Rate limiting is in-memory** — write endpoints are throttled per-IP via `lib/rate-limit.ts` (sliding window); swap the storage for `@upstash/ratelimit` when deploying multiple instances
 
 ---
 

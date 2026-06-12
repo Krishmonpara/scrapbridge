@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, 'inquiry-post', { limit: 10, windowMs: 60000 })
+  if (limited) return limited
+
   try {
     const body = await request.json()
     const { listingId, toCompanyId, contactName, contactEmail, contactPhone, message } = body

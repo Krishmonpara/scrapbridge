@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 // GET /api/verification?companyId=... → current verification status
 export async function GET(request: NextRequest) {
@@ -21,6 +22,9 @@ export async function GET(request: NextRequest) {
 // POST /api/verification { companyId, ein, licenseNumber }
 // → stores documents and moves UNVERIFIED → PENDING for manual review
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, 'verification-post', { limit: 5, windowMs: 300_000 })
+  if (limited) return limited
+
   try {
     const { companyId, ein, licenseNumber } = await request.json()
 

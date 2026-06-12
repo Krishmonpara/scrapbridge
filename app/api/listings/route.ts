@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { scoreListing } from '@/lib/agents/quality-agent'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -70,6 +71,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, 'listings-post', { limit: 10, windowMs: 60_000 })
+  if (limited) return limited
+
   try {
     const body = await request.json()
     const quality = scoreListing(body)
