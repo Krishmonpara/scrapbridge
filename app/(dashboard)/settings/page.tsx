@@ -1,8 +1,7 @@
 import { Navbar } from '@/components/navigation/Navbar'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { ShieldCheck } from 'lucide-react'
+import { VerificationCard } from '@/components/forms/VerificationCard'
 
 const SECTIONS = [
   { id: 'profile', label: 'Profile' },
@@ -61,10 +60,7 @@ export default function SettingsPage() {
                 className="p-6 rounded flex flex-col gap-5"
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
               >
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-[var(--text-primary)]">Company</h2>
-                  <Badge variant="amber">Verification Pending</Badge>
-                </div>
+                <h2 className="font-semibold text-[var(--text-primary)]">Company</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Company Name" placeholder="Acme Scrap Metals LLC" />
                   <Input label="EIN" placeholder="XX-XXXXXXX" />
@@ -86,20 +82,7 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                {/* Verification CTA */}
-                <div
-                  className="flex items-start gap-3 p-4 rounded"
-                  style={{ background: 'var(--accent-glow)', border: '1px solid rgba(255,255,255,0.2)' }}
-                >
-                  <ShieldCheck size={20} className="text-[var(--accent)] shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[var(--accent)]">Get Verified</p>
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                      Verified companies get 3× more inquiries. Submit your business license and EIN to get verified.
-                    </p>
-                  </div>
-                  <Button size="sm">Apply Now</Button>
-                </div>
+                <VerificationCard />
 
                 <div className="flex justify-end">
                   <Button>Save Company</Button>

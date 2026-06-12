@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { scoreListing } from '@/lib/agents/quality-agent'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -71,8 +72,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const listing = await prisma.listing.create({ data: body })
-    return Response.json(listing, { status: 201 })
+    const quality = scoreListing(body)
+    const listing = await prisma.listing.create({
+      data: { ...body, qualityScore: quality.score },
+    })
+    return Response.json({ ...listing, quality }, { status: 201 })
   } catch (err) {
     return Response.json({ error: 'Failed to create listing' }, { status: 400 })
   }

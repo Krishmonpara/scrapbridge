@@ -142,6 +142,7 @@ model Listing {
   status              ListingStatus    @default(ACTIVE)
   viewCount           Int              @default(0)
   inquiryCount        Int              @default(0)
+  qualityScore        Int              @default(0)
   photos              String[]
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
@@ -163,6 +164,39 @@ model Inquiry {
   contactEmail  String
   status        InquiryStatus @default(PENDING)
   createdAt     DateTime      @default(now())
+
+  messages Message[]
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  inquiryId       String
+  inquiry         Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  senderCompanyId String
+  body            String
+  readAt          DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+enum MatchStatus {
+  NEW
+  SEEN
+  DISMISSED
+  CONTACTED
+}
+
+model MatchAlert {
+  id        String      @id @default(cuid())
+  rfqId     String
+  listingId String
+  score     Float
+  reasons   String[]
+  status    MatchStatus @default(NEW)
+  createdAt DateTime    @default(now())
+
+  @@unique([rfqId, listingId])
 }
 
 model RFQ {

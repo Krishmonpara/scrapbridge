@@ -6,6 +6,7 @@ import { VerifiedBadge } from '@/components/shared/VerifiedBadge'
 import { LocationPin } from '@/components/shared/LocationPin'
 import { FreshnessTag } from '@/components/shared/FreshnessTag'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
+import { FairPriceBadge } from '@/components/shared/FairPriceBadge'
 import { InquiryForm } from '@/components/forms/InquiryForm'
 import {
   CATEGORY_LABELS,
@@ -48,6 +49,7 @@ export function ListingDetail({ listing, relatedListings = [] }: ListingDetailPr
               {CONDITION_LABELS[listing.condition]}
             </Badge>
             <FreshnessTag date={listing.createdAt} />
+            <FairPriceBadge listing={listing} />
           </div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{listing.title}</h1>
           <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">

@@ -13,6 +13,8 @@ import {
   LayoutDashboard,
   FileText,
   MessageSquare,
+  MessagesSquare,
+  Sparkles,
   Settings,
   LogOut,
   User,
@@ -201,6 +203,12 @@ export function Navbar() {
           >
             Post RFQ
           </Link>
+          <Link
+            href="/market"
+            className="h-8 px-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150 flex items-center rounded hover:bg-[var(--bg-tertiary)]"
+          >
+            Market Data
+          </Link>
         </div>
 
         {/* Right */}
@@ -369,6 +377,8 @@ export function Navbar() {
                     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
                     { href: '/my-listings', label: 'My Listings', icon: FileText },
                     { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
+                    { href: '/messages', label: 'Messages', icon: MessagesSquare },
+                    { href: '/matches', label: 'Matches', icon: Sparkles },
                     { href: '/settings', label: 'Settings', icon: Settings },
                   ].map(({ href, label, icon: Icon }) => (
                     <Link

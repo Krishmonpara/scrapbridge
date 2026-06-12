@@ -1,0 +1,54 @@
+FLAG — INPUT REQUIRED OR SUGGESTION
+====================================
+This file tracks gaps that need YOUR input. Work continues around them;
+each item lists what was stubbed/defaulted so nothing is blocked.
+
+[1] STRIPE KEYS (for escrow payments)
+    Needed: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET in .env
+    Until then: payment/escrow flow is NOT built (intentionally deferred —
+    building it without keys means untestable code). When you add keys, say
+    "build payments" and the Stripe Connect escrow flow gets built.
+
+[2] GOOGLE OAUTH CREDENTIALS
+    Needed: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET in .env
+    Until then: Google sign-in button exists but errors. Credentials login works.
+
+[3] LIVE METAL PRICE FEED
+    lib/agents/price-intelligence.ts uses a STATIC spot-price snapshot
+    (USD/metric ton, conservative ranges). For production, plug in:
+    - LME API (paid), or metals-api.com (free tier), or scrape MSTC.
+    Suggestion: metals-api.com free tier = 50 req/month, enough for a
+    daily cron refresh. Needs METALS_API_KEY in .env.
+
+[4] EMAIL / WHATSAPP NOTIFICATIONS
+    Match alerts + new messages currently surface only in-app.
+    Needed for outbound: RESEND_API_KEY (email) and/or Twilio creds (WhatsApp).
+    Suggestion: Resend free tier (100 emails/day) is the fastest path.
+
+[5] VERIFICATION DOCUMENT REVIEW
+    The verification request flow (built) sets companies to PENDING.
+    Approving them is a human/admin task — fraud queue lives at /admin/flagged.
+    Decide who reviews and approves verification requests.
+
+[6] RATE LIMITING STORAGE
+    README notes Upstash rate limiting as missing. Needs UPSTASH_REDIS_REST_URL
+    + UPSTASH_REDIS_REST_TOKEN, or say "use in-memory" for a dev-only limiter.
+
+[7] *** CRITICAL: YOUR DISK IS FAILING — BACK UP NOW ***
+    During this session ~300 project files became unreadable (APFS data-block
+    corruption): 57 source files, all of public/ + frames/ (480 images),
+    postcss.config.mjs, and the local .git history pack. Even THIS FILE,
+    written earlier in the session, went unreadable and had to be rewritten.
+    Everything was recovered from GitHub (nothing lost — it was all pushed).
+    node_modules and .next were rebuilt fresh.
+    ACTION REQUIRED:
+      1. Back up anything on this Mac that is NOT on GitHub/iCloud, today.
+      2. Run Disk Utility → First Aid on Macintosh HD.
+      3. If errors persist, this SSD is dying — migrate to a new machine/drive.
+    GitHub (https://github.com/Krishmonpara/scrapbridge) is currently the
+    only safe copy of this project. Push after every work session.
+
+STATUS LOG
+----------
+2026-06-12: File created. Items 1-6 non-blocking; work continued.
+2026-06-12: Disk corruption event — full recovery from GitHub completed.

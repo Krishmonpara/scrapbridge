@@ -55,6 +55,7 @@ export default function PostListingPage() {
   const [submitError, setSubmitError] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [demoCompanyId, setDemoCompanyId] = useState<string | null>(null)
+  const [quality, setQuality] = useState<{ score: number; grade: string; suggestions: string[] } | null>(null)
 
   const [formData, setFormData] = useState<Record<string, string>>({})
 
@@ -138,6 +139,8 @@ export default function PostListingPage() {
         throw new Error(err?.error ?? `Server error ${res.status}`)
       }
 
+      const created = await res.json().catch(() => null)
+      if (created?.quality) setQuality(created.quality)
       setSubmitted(true)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit listing. Please try again.')
@@ -164,6 +167,40 @@ export default function PostListingPage() {
             </div>
             <h2 className="text-2xl font-bold text-[var(--text-primary)]">Listing Submitted!</h2>
             <p className="text-[var(--text-secondary)]">Your listing has been posted and is now live.</p>
+            {quality && (
+              <div
+                className="max-w-md w-full rounded p-4 text-left"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                    Listing Quality
+                  </p>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">
+                    {quality.score}/100 · {quality.grade}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: 'var(--bg-tertiary)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${quality.score}%`,
+                      background: quality.score >= 65 ? '#2dba6e' : quality.score >= 40 ? '#f59e0b' : '#ef4444',
+                    }}
+                  />
+                </div>
+                {quality.suggestions.length > 0 && (
+                  <ul className="flex flex-col gap-1.5">
+                    {quality.suggestions.slice(0, 4).map((s) => (
+                      <li key={s} className="text-xs text-[var(--text-secondary)] flex gap-2">
+                        <span className="text-[var(--text-tertiary)]">→</span>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <Button variant="secondary" asChild>
                 <Link href="/my-listings">My Listings</Link>
