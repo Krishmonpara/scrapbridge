@@ -7,6 +7,7 @@ import { Navbar } from '@/components/navigation/Navbar'
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge'
 import { LocationPin } from '@/components/shared/LocationPin'
 import { ListingCard } from '@/components/listings/ListingCard'
+import { ReviewSection } from '@/components/company/ReviewSection'
 import { Badge } from '@/components/ui/Badge'
 import { BUSINESS_TYPE_LABELS } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -104,6 +105,8 @@ export default async function CompanyProfilePage({ params }: { params: Promise<{
               ))}
             </div>
           )}
+
+          <ReviewSection companyId={company.id} />
         </div>
       </div>
     </>

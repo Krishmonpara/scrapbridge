@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
-  Bell,
   Menu,
   X,
   ChevronDown,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
+import { NotificationBell } from '@/components/navigation/NotificationBell'
 import { CATEGORY_LABELS, MaterialCategory } from '@/types'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [MaterialCategory, string][]
@@ -356,12 +356,7 @@ export function Navbar() {
             </AnimatePresence>
           </div>
 
-          <button
-            className="w-8 h-8 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors duration-150 relative"
-            title="Notifications"
-          >
-            <Bell size={16} />
-          </button>
+          <NotificationBell />
 
           <div className="w-px h-5 mx-1" style={{ background: 'var(--border)' }} />
 

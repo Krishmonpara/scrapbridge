@@ -5,6 +5,7 @@ import { Navbar } from '@/components/navigation/Navbar'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { DataTable } from '@/components/ui/DataTable'
+import { ListingActions } from '@/components/listings/ListingActions'
 import { Plus, Eye, MessageSquare } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { CATEGORY_LABELS, UNIT_LABELS } from '@/types'
@@ -94,6 +95,12 @@ export default async function MyListingsPage() {
       render: (row: any) => (
         <span className="text-xs text-[var(--text-tertiary)]">{formatDate(row.createdAt)}</span>
       ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right' as const,
+      render: (row: any) => <ListingActions id={row.id} status={row.status} />,
     },
   ]
 
