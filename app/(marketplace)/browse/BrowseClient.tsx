@@ -275,13 +275,13 @@ function ListingListView({ listings }: { listings: any[] }) {
           </span>
           <span
             className="text-xs"
-            style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--text-primary)' }}
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}
           >
             {l.quantity} {l.unit}
           </span>
           <span
             className="text-sm font-semibold"
-            style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)' }}
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}
           >
             {l.pricePerUnit ? `$${l.pricePerUnit}` : 'RFQ'}
           </span>

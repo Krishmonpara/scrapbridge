@@ -63,7 +63,7 @@ export function CompanyProfile({ company, listingCount = 0 }: CompanyProfileProp
             </div>
             <span
               className="text-lg font-bold text-[var(--text-primary)]"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              style={{ fontFamily: 'var(--font-display)' }}
             >
               {value}
             </span>

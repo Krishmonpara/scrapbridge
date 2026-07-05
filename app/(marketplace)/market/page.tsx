@@ -117,7 +117,7 @@ export default async function MarketPage() {
               <table className="w-full text-sm" style={{ minWidth: 720 }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                    {['Category', 'Supply', 'New (30d)', 'Avg Ask', 'Reference Range (USD/t)', ''].map((h) => (
+                    {['Category', 'Supply', 'New (30d)', 'Momentum', 'Avg Ask', 'Reference Range (USD/t)', ''].map((h) => (
                       <th
                         key={h}
                         className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]"
@@ -166,6 +166,33 @@ export default async function MarketPage() {
                         ) : (
                           <span className="text-[var(--text-tertiary)]">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          // momentum = share of supply listed in the last 30 days
+                          const pct = s.activeListings > 0 ? Math.round((s.newLast30d / s.activeListings) * 100) : 0
+                          const hot = pct >= 25
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-14 overflow-hidden hidden md:block" style={{ background: 'var(--bg-tertiary)' }}>
+                                <div
+                                  className="h-full"
+                                  style={{
+                                    width: `${Math.min(pct, 100)}%`,
+                                    background: hot ? 'var(--up)' : 'var(--neutral)',
+                                    boxShadow: hot ? `0 0 8px var(--up-glow)` : 'none',
+                                  }}
+                                />
+                              </div>
+                              <span
+                                className="text-xs tabular-nums"
+                                style={{ color: hot ? 'var(--up)' : 'var(--text-tertiary)', fontFamily: 'var(--font-display)' }}
+                              >
+                                {pct}%
+                              </span>
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)]">
                         {s.avgAskPrice ? `$${formatNumber(Math.round(s.avgAskPrice * 100) / 100)}` : '—'}

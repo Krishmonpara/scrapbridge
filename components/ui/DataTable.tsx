@@ -131,7 +131,7 @@ export function DataTable<T>({
                         alignClass[col.align ?? 'left'],
                         col.mono && 'font-mono-data'
                       )}
-                      style={col.mono ? { fontFamily: "'JetBrains Mono', monospace" } : {}}
+                      style={col.mono ? { fontFamily: 'var(--font-display)' } : {}}
                     >
                       {col.render
                         ? col.render(row)

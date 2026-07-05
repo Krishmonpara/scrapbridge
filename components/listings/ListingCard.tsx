@@ -11,6 +11,7 @@ import { VerifiedBadge } from '@/components/shared/VerifiedBadge'
 import { LocationPin } from '@/components/shared/LocationPin'
 import { FreshnessTag } from '@/components/shared/FreshnessTag'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
+import { FairPriceBadge } from '@/components/shared/FairPriceBadge'
 import { CATEGORY_LABELS, CONDITION_LABELS, UNIT_LABELS } from '@/types'
 import { formatNumber } from '@/lib/utils'
 import { getMaterialImage } from '@/lib/materialImages'
@@ -38,10 +39,20 @@ export function ListingCard({ listing }: ListingCardProps) {
     <motion.div
       whileHover={{ y: -3 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
-      className="group flex flex-col w-full rounded-md overflow-hidden border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--accent)]/40 hover:shadow-[0_8px_28px_-12px_rgba(255,255,255,0.35)] transition-[border-color,box-shadow] duration-200"
+      className="group relative flex flex-col w-full rounded-sm border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--steel-blue)]/50 hover:shadow-[var(--elev-2)] transition-[border-color,box-shadow] duration-200"
     >
-      {/* Photo area */}
-      <div className="relative h-40 overflow-hidden bg-[var(--bg-tertiary)]">
+      {/* HUD corner brackets — draw in on hover */}
+      <span className="pointer-events-none absolute -top-px -left-px w-3 h-3 border-t border-l border-[var(--steel-blue)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20" />
+      <span className="pointer-events-none absolute -top-px -right-px w-3 h-3 border-t border-r border-[var(--steel-blue)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20" />
+      <span className="pointer-events-none absolute -bottom-px -left-px w-3 h-3 border-b border-l border-[var(--steel-blue)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20" />
+      <span className="pointer-events-none absolute -bottom-px -right-px w-3 h-3 border-b border-r border-[var(--steel-blue)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20" />
+
+      {/* Photo area — shares a view-transition-name with the detail hero
+          so navigating morphs the thumbnail into the full image */}
+      <div
+        className="relative h-40 overflow-hidden rounded-t-sm bg-[var(--bg-tertiary)]"
+        style={{ viewTransitionName: `listing-photo-${listing.id}` }}
+      >
         {(() => {
           const photo = listing.photos?.[0] || getMaterialImage(listing.materialCategory, listing.id)
           return (
@@ -95,7 +106,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           <span className="text-xs text-[var(--text-tertiary)]">Qty Available</span>
           <span
             className="text-sm font-semibold text-[var(--text-primary)]"
-            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             {formatNumber(listing.quantity)} {UNIT_LABELS[listing.unit]}
           </span>
@@ -103,13 +114,16 @@ export function ListingCard({ listing }: ListingCardProps) {
 
         {/* Price */}
         {listing.pricePerUnit ? (
-          <PriceTag
-            price={listing.pricePerUnit}
-            unit={UNIT_LABELS[listing.unit]}
-            currency={listing.currency}
-            negotiable={listing.negotiable}
-            size="md"
-          />
+          <div className="flex items-center justify-between gap-2">
+            <PriceTag
+              price={listing.pricePerUnit}
+              unit={UNIT_LABELS[listing.unit]}
+              currency={listing.currency}
+              negotiable={listing.negotiable}
+              size="md"
+            />
+            <FairPriceBadge listing={listing} />
+          </div>
         ) : (
           <span className="text-sm text-[var(--text-tertiary)] italic">Price on request</span>
         )}

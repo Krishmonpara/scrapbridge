@@ -3,7 +3,7 @@ import { Navbar } from '@/components/navigation/Navbar'
 import { Footer } from '@/components/navigation/Footer'
 import { HeroSection } from '@/components/hero/HeroSection'
 import { StatsStrip } from '@/components/home/StatsStrip'
-import { LiveDot } from '@/components/ui/LiveDot'
+import { MarketTicker } from '@/components/ui/MarketTicker'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { FreshnessTag } from '@/components/shared/FreshnessTag'
@@ -13,20 +13,6 @@ import { HorizontalScroll } from '@/components/ui/HorizontalScroll'
 import { ArrowRight, Package, TrendingUp } from 'lucide-react'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [MaterialCategory, string][]
-
-const TICKER_ITEMS = [
-  { name: 'HMS 1&2', price: '$245/ton', up: true },
-  { name: 'Bare Bright Copper', price: '$3.42/lb', up: true },
-  { name: '#1 Copper', price: '$3.18/lb', up: false },
-  { name: 'Cast Aluminum', price: '$0.52/lb', up: true },
-  { name: '304 Stainless', price: '$0.68/lb', up: false },
-  { name: 'Diesel Engine Blocks', price: '$0.18/lb', up: true },
-  { name: 'Electric Motors', price: '$0.22/lb', up: true },
-  { name: 'Lead Acid Batteries', price: '$0.22/lb', up: false },
-  { name: 'Aluminum Radiators', price: '$0.38/lb', up: true },
-  { name: '#2 Copper', price: '$2.95/lb', up: false },
-  { name: 'Shredded Steel', price: '$195/ton', up: true },
-]
 
 const HOW_IT_WORKS = [
   {
@@ -93,42 +79,8 @@ export default async function HomePage() {
         {/* Hero */}
         <HeroSection />
 
-        {/* Market Ticker */}
-        <div
-          className="h-10 flex items-center overflow-hidden relative"
-          style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}
-        >
-          {/* "LIVE MARKET" stamp pinned to the left edge */}
-          <div
-            className="shrink-0 h-full flex items-center gap-2 px-4 z-10"
-            style={{ background: 'var(--background)', borderRight: '1px solid var(--border)' }}
-          >
-            <LiveDot size={5} />
-            <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted-foreground)]">
-              Live Market
-            </span>
-          </div>
-          <div className="ticker-track flex items-center gap-0 whitespace-nowrap">
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span key={i} className="flex items-center gap-2 px-6">
-                <span className="text-xs text-[var(--text-secondary)]">{item.name}</span>
-                <span
-                  className="text-xs font-semibold"
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    color: 'var(--accent)',
-                  }}
-                >
-                  {item.price}
-                </span>
-                <span className={item.up ? 'text-[#2dba6e] text-xs' : 'text-[#c43a3a] text-xs'}>
-                  {item.up ? '▲' : '▼'}
-                </span>
-                <span className="text-[var(--border-accent)] text-xs">·</span>
-              </span>
-            ))}
-          </div>
-        </div>
+        {/* Market Ticker — live marketplace activity from /api/public/prices */}
+        <MarketTicker />
 
         {/* Stats + trust strip — animated counters & verification badges */}
         <StatsStrip />
@@ -194,7 +146,7 @@ export default async function HomePage() {
               <div key={step} className="flex flex-col gap-4">
                 <span
                   className="text-4xl font-bold"
-                  style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)', opacity: 0.4 }}
+                  style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)', opacity: 0.4 }}
                 >
                   {step}
                 </span>

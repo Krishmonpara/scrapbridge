@@ -18,7 +18,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        'bg-[var(--foreground)] text-[var(--background)] hover:opacity-88 active:scale-[0.98]',
+        'scan-sweep bg-[var(--foreground)] text-[var(--background)] hover:opacity-88 active:scale-[0.98]',
       secondary:
         'bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-accent)] hover:bg-[var(--bg-secondary)]',
       outline:

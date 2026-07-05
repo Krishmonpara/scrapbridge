@@ -14,7 +14,7 @@ export default function NotFoundPage() {
         <div className="text-center max-w-md">
           <p
             className="text-8xl font-bold mb-4"
-            style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)', opacity: 0.3 }}
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)', opacity: 0.3 }}
           >
             404
           </p>

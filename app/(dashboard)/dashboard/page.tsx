@@ -152,7 +152,7 @@ export default async function DashboardPage() {
                 </div>
                 <div
                   className="text-2xl font-bold"
-                  style={{ fontFamily: "'JetBrains Mono', monospace", color }}
+                  style={{ fontFamily: 'var(--font-display)', color }}
                 >
                   {value}
                 </div>
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
                         {l.pricePerUnit ? (
                           <span
                             className="text-sm font-semibold"
-                            style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)' }}
+                            style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}
                           >
                             ${l.pricePerUnit}
                           </span>
@@ -343,7 +343,7 @@ export default async function DashboardPage() {
                         </span>
                         <span
                           className="text-xs text-[var(--accent)]"
-                          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                          style={{ fontFamily: 'var(--font-display)' }}
                         >
                           {rfq.quantityNeeded} {rfq.unit}
                         </span>

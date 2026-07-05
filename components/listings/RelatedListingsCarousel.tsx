@@ -169,7 +169,7 @@ export function RelatedListingsCarousel({
                 {rel.pricePerUnit ? (
                   <p
                     className="text-sm font-bold mt-auto"
-                    style={{ color: 'var(--accent)', fontFamily: "'JetBrains Mono', monospace" }}
+                    style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}
                   >
                     ${rel.pricePerUnit}
                     <span className="text-xs font-normal text-[var(--text-tertiary)]">

@@ -7,6 +7,8 @@ import { LocationPin } from '@/components/shared/LocationPin'
 import { FreshnessTag } from '@/components/shared/FreshnessTag'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
 import { FairPriceBadge } from '@/components/shared/FairPriceBadge'
+import { ImageWithShimmer } from '@/components/ui/ImageWithShimmer'
+import { getMaterialImage } from '@/lib/materialImages'
 import { InquiryForm } from '@/components/forms/InquiryForm'
 import {
   CATEGORY_LABELS,
@@ -61,14 +63,23 @@ export function ListingDetail({ listing, relatedListings = [] }: ListingDetailPr
           </div>
         </div>
 
-        {/* Icon/photo area */}
+        {/* Photo hero — same image as the ListingCard so the shared-element
+            view transition can morph card → detail */}
         <div
-          className="h-64 rounded flex items-center justify-center"
-          style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border)' }}
+          className="relative h-64 rounded-sm overflow-hidden"
+          style={{
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--border)',
+            viewTransitionName: `listing-photo-${listing.id}`,
+          }}
         >
-          <span className="text-[var(--accent)] opacity-20">
-            <MaterialIcon category={listing.materialCategory} size={96} />
-          </span>
+          <ImageWithShimmer
+            src={listing.photos?.[0] || getMaterialImage(listing.materialCategory, listing.id)}
+            alt={listing.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            fallbackIcon={<MaterialIcon category={listing.materialCategory} size={96} />}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Specs table */}

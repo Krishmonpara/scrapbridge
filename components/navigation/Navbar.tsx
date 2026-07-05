@@ -46,6 +46,15 @@ export function Navbar() {
   const [searchResults, setSearchResults] = useState<SearchResult>({ listings: [], companies: [] })
   const [searching, setSearching] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // stronger bottom glow once the page scrolls under the fixed navbar
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   const searchRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -97,11 +106,13 @@ export function Navbar() {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-6 gap-4 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-6 gap-4 backdrop-blur-xl transition-shadow duration-300"
         style={{
-          background: 'rgba(10,14,20,0.72)',
+          background: scrolled ? 'rgba(10,14,20,0.85)' : 'rgba(10,14,20,0.72)',
           borderBottom: '1px solid var(--border)',
-          boxShadow: '0 4px 20px -8px rgba(0,0,0,0.4)',
+          boxShadow: scrolled
+            ? '0 4px 20px -8px rgba(0,0,0,0.6), 0 1px 0 0 color-mix(in srgb, var(--foreground) 12%, transparent)'
+            : '0 4px 20px -8px rgba(0,0,0,0.4)',
         }}
       >
         {/* Logo */}

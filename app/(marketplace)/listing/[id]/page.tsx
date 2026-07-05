@@ -193,7 +193,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                   </h2>
                   <div
                     className="p-4 rounded text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap font-mono"
-                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', fontFamily: "'JetBrains Mono', monospace" }}
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', fontFamily: 'var(--font-display)' }}
                   >
                     {listing.specs}
                   </div>

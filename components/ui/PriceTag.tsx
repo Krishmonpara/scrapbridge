@@ -29,7 +29,7 @@ export function PriceTag({
     <div className={cn('flex items-baseline gap-1.5', className)}>
       <span
         className={cn('font-mono-data font-bold text-[var(--accent)]', sizes[size])}
-        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        style={{ fontFamily: 'var(--font-display)' }}
       >
         {formatPrice(price, currency)}
       </span>

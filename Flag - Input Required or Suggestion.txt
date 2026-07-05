@@ -57,6 +57,14 @@ each item lists what was stubbed/defaulted so nothing is blocked.
     Suggestion: keep a copy of .env in a password manager since it can't
     live on GitHub.
 
+[9] LEFTOVER .git-dead/ DIRECTORY (3.3 MB)
+    The corrupted git directory from the disk-recovery was renamed to
+    .git-dead/ and kept as a safety net. The new .git works and all commits
+    are pushed to GitHub. Once you confirm the repo is healthy, delete it:
+    rm -rf ".git-dead"
+    (Kept rather than auto-deleted because removing a git directory is
+    destructive and it's only 3.3 MB.)
+
 STATUS LOG
 ----------
 2026-06-12: File created. Items 1-6 non-blocking; work continued.
