@@ -56,6 +56,13 @@ consistency, dark-mode-first review.
 
 ---
 
+## Phase 2 — Smoothness (no keys required) — SHIPPED 2026-07-06
+1. Route-level `loading.tsx` skeletons: browse, market, listing/[id],
+   dashboard, messages, matches — instant feedback on navigation
+2. `Reveal` component (IntersectionObserver → grid-fade-in) wrapping home sections
+3. Category tile hover: icon glow + lift via group transitions
+4. "Market Pulse" bento tile on home — live top-category supply bars (SSR)
+
 ### Execution notes for Fable 5
 Drive one step at a time. Each step's output is the next step's dependency, so
 do them in order. Keep the "global rule" above in every prompt or it drifts

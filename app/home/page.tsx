@@ -3,7 +3,9 @@ import { Navbar } from '@/components/navigation/Navbar'
 import { Footer } from '@/components/navigation/Footer'
 import { HeroSection } from '@/components/hero/HeroSection'
 import { StatsStrip } from '@/components/home/StatsStrip'
+import { MarketPulse } from '@/components/home/MarketPulse'
 import { MarketTicker } from '@/components/ui/MarketTicker'
+import { Reveal } from '@/components/ui/Reveal'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { FreshnessTag } from '@/components/shared/FreshnessTag'
@@ -85,30 +87,35 @@ export default async function HomePage() {
         {/* Stats + trust strip — animated counters & verification badges */}
         <StatsStrip />
 
-        {/* Category Grid */}
+        {/* Category Grid + Market Pulse bento */}
         <section className="px-6 py-16 max-w-screen-xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-[var(--text-primary)]">Browse by Category</h2>
-            <Link href="/browse" className="text-sm text-[var(--accent)] hover:underline">
-              View all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-            {CATEGORIES.map(([cat, label]) => (
-              <Link
-                key={cat}
-                href={`/browse?category=${cat}`}
-                className="group flex flex-col items-center gap-2 p-4 rounded text-center transition-all duration-150 bg-[var(--bg-secondary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:border-[var(--accent)]"
-              >
-                <span className="text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors duration-150">
-                  <MaterialIcon category={cat} size={28} />
-                </span>
-                <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors duration-150 leading-tight">
-                  {label}
-                </span>
+          <Reveal>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">Browse by Category</h2>
+              <Link href="/browse" className="text-sm text-[var(--accent)] hover:underline">
+                View all →
               </Link>
-            ))}
-          </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 content-start">
+                {CATEGORIES.map(([cat, label]) => (
+                  <Link
+                    key={cat}
+                    href={`/browse?category=${cat}`}
+                    className="group flex flex-col items-center gap-2 p-4 rounded-sm text-center bg-[var(--bg-secondary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:border-[var(--accent)] hover:-translate-y-0.5 hover:shadow-[var(--elev-1)] transition-[transform,border-color,background,box-shadow] duration-200"
+                  >
+                    <span className="text-[var(--text-tertiary)] group-hover:text-[var(--accent)] group-hover:scale-110 group-hover:drop-shadow-[0_0_10px_var(--accent-glow)] transition-[color,transform,filter] duration-200">
+                      <MaterialIcon category={cat} size={28} />
+                    </span>
+                    <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors duration-150 leading-tight">
+                      {label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <MarketPulse />
+            </div>
+          </Reveal>
         </section>
 
         {/* Featured Listings */}
@@ -118,41 +125,47 @@ export default async function HomePage() {
             style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}
           >
             <div className="px-6 max-w-screen-xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)]">Featured Listings</h2>
-                <Link href="/browse" className="text-sm text-[var(--accent)] hover:underline">
-                  View all →
-                </Link>
-              </div>
-              <HorizontalScroll cardWidth={288} gap={16}>
-                {featured.map((listing) => (
-                  <div key={listing.id} className="shrink-0 w-72" style={{ scrollSnapAlign: 'start' }}>
-                    <ListingCard listing={listing as any} />
-                  </div>
-                ))}
-              </HorizontalScroll>
+              <Reveal>
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-[var(--text-primary)]">Featured Listings</h2>
+                  <Link href="/browse" className="text-sm text-[var(--accent)] hover:underline">
+                    View all →
+                  </Link>
+                </div>
+                <HorizontalScroll cardWidth={288} gap={16}>
+                  {featured.map((listing) => (
+                    <div key={listing.id} className="shrink-0 w-72" style={{ scrollSnapAlign: 'start' }}>
+                      <ListingCard listing={listing as any} />
+                    </div>
+                  ))}
+                </HorizontalScroll>
+              </Reveal>
             </div>
           </section>
         )}
 
         {/* How it Works */}
         <section className="px-6 py-20 max-w-screen-xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-3">How ScrapBridge Works</h2>
-            <p className="text-[var(--text-secondary)]">Simple, direct, industrial-grade</p>
-          </div>
+          <Reveal>
+            <div className="text-center mb-12">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-3">How ScrapBridge Works</h2>
+              <p className="text-[var(--text-secondary)]">Simple, direct, industrial-grade</p>
+            </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {HOW_IT_WORKS.map(({ step, title, desc }) => (
-              <div key={step} className="flex flex-col gap-4">
-                <span
-                  className="text-4xl font-bold"
-                  style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)', opacity: 0.4 }}
-                >
-                  {step}
-                </span>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h3>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{desc}</p>
-              </div>
+            {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
+              <Reveal key={step} delay={i * 90}>
+                <div className="flex flex-col gap-4">
+                  <span
+                    className="text-4xl font-bold"
+                    style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)', opacity: 0.4 }}
+                  >
+                    {step}
+                  </span>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h3>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{desc}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </section>
