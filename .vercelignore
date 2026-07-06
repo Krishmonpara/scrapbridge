@@ -1,0 +1,4 @@
+.git-dead
+.next
+node_modules
+*.log

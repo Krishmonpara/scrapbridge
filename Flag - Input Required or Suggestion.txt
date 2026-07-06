@@ -56,6 +56,16 @@ each item lists what was stubbed/defaulted so nothing is blocked.
       layers via `docker system prune` (ASK first — removes stopped containers).
     - First Aid (step 2 above) needs no free space — still do it.
 
+[9] VERCEL DEPLOY (requested 2026-07-06)
+    Prep done: `postinstall: prisma generate` added so Vercel builds work.
+    To go live, two things only you can provide:
+    1. VERCEL LOGIN — run `npx vercel login` once in a terminal (email link),
+       then tell me "deploy" and I'll run the production deploy.
+    2. HOSTED POSTGRES — the local Docker DB isn't reachable from Vercel.
+       Free options: Neon (neon.tech) or Supabase — create a DB, then set
+       DATABASE_URL + AUTH_SECRET + NEXTAUTH_URL in Vercel project env vars.
+       Without it the site deploys but shows empty listings (graceful).
+
 [8] .ENV WAS RECONSTRUCTED (secrets regenerated)
     The original .env was destroyed by the disk corruption (it is gitignored,
     so there was no GitHub copy). It was rebuilt with:

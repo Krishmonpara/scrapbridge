@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "fix-perms": "chmod -R a+rX node_modules",
+    "postinstall": "prisma generate",
     "predev": "npm run fix-perms",
     "prebuild": "npm run fix-perms",
     "dev": "next dev --webpack",
