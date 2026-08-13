@@ -37,14 +37,26 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
   // true = skipping (already seen) — show black screen while redirecting
   // false = show splash and preload
   const [skip, setSkip] = useState<boolean | null>(null)
+  // Flipped by skipSplash() so the preload workers stop queueing new frames.
+  // Without this, "Skip intro" navigates while 240 images keep downloading,
+  // which starves the very navigation the user just asked for.
+  const abortedRef = useRef(false)
 
-  // Decide on mount: skip if user already saw the splash this session.
-  // This runs BEFORE preload, so returning visitors don't waste bandwidth.
+  // Decide on mount: skip if user already saw the splash this session, or if the
+  // visitor has asked for reduced motion — a 240-frame explosion is exactly the
+  // kind of sequence that setting exists to suppress, and it must not be the
+  // only way into the site.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       const seen = sessionStorage.getItem(storageKey) === '1'
-      if (seen) {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (seen || reduced) {
+        if (reduced) {
+          try {
+            sessionStorage.setItem(storageKey, '1')
+          } catch {}
+        }
         setSkip(true)
         router.replace(ctaHref)
       } else {
@@ -102,12 +114,13 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
 
     function loadFrame(i: number): Promise<void> {
       return new Promise((resolve) => {
+        if (cancelled || abortedRef.current) return resolve()
         const img = new Image()
         const num = String(i + 1).padStart(3, '0')
         img.src = `/frames/ezgif-frame-${num}.jpg`
         img.onload = () => {
           const finish = () => {
-            if (cancelled) return resolve()
+            if (cancelled || abortedRef.current) return resolve()
             framesRef.current[i] = img
             setLoadedCount((c) => c + 1)
             if (i === 0) draw(img)
@@ -126,14 +139,14 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
 
     let next = 0
     const worker = async () => {
-      while (next < TOTAL_FRAMES && !cancelled) {
+      while (next < TOTAL_FRAMES && !cancelled && !abortedRef.current) {
         const i = next++
         await loadFrame(i)
       }
     }
     const workers = Array.from({ length: CONCURRENCY }, worker)
     Promise.all(workers).then(() => {
-      if (cancelled) return
+      if (cancelled || abortedRef.current) return
       startedRef.current = true
       setReady(true)
       setShowHud(true)
@@ -193,6 +206,11 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
         lastTimeRef.current = 0
       } else if (e.code === 'Enter' && ready) {
         enterSite()
+      } else if (e.code === 'Escape') {
+        // Always available, including mid-preload — Escape is the reliable way
+        // out for anyone who does not want to sit through the sequence.
+        e.preventDefault()
+        skipSplash()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -207,9 +225,16 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
   }
 
   const skipSplash = () => {
+    // Stop the preload FIRST, then blank the splash, then navigate. Setting
+    // skip=true unmounts the canvas and drops the frames already held, so the
+    // browser stops competing with the route change for bandwidth.
+    abortedRef.current = true
+    playingRef.current = false
+    framesRef.current = new Array(TOTAL_FRAMES)
     try {
       sessionStorage.setItem(storageKey, '1')
     } catch {}
+    setSkip(true)
     router.replace(ctaHref)
   }
 
@@ -284,7 +309,7 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
               e.stopPropagation()
               skipSplash()
             }}
-            className="absolute top-6 right-6 text-[10px] tracking-[0.28em] uppercase text-white/50 hover:text-[var(--foreground)] cursor-pointer transition-colors"
+            className="absolute top-6 right-6 z-30 px-2 py-1 text-[10px] tracking-[0.28em] uppercase text-white/50 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)] cursor-pointer transition-colors"
           >
             Skip intro →
           </button>
@@ -417,7 +442,7 @@ export function FrameAnimationHero({ ctaHref, storageKey }: Props) {
             e.stopPropagation()
             skipSplash()
           }}
-          className="absolute top-6 right-32 z-[7] text-[10px] tracking-[0.28em] uppercase text-white/50 hover:text-[var(--foreground)] cursor-pointer transition-colors hidden md:block"
+          className="absolute top-16 right-6 md:top-6 md:right-32 z-[7] px-2 py-1 text-[10px] tracking-[0.28em] uppercase text-white/50 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)] cursor-pointer transition-colors"
         >
           Skip intro →
         </button>

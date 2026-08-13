@@ -288,3 +288,116 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+// ============================================================
+// MARKET INTELLIGENCE
+// Benchmark + scrap-grade price series, the dated events that
+// explain their moves, and stored forward projections.
+// Addresses Flag #3 (live metal price feed): ticks are written by
+// a loader, so swapping the sample seed for a real feed touches
+// only the loader, never the consumers.
+// ============================================================
+
+enum PriceSource {
+  SAMPLE // synthesised seed data — clearly labelled in the UI
+  MANUAL // hand-entered by an admin
+  FEED   // ingested from a live provider
+}
+
+enum QuoteUnit {
+  USD_LB
+  USD_TON
+  USD_CWT
+}
+
+// Ferrous grades quote in USD/ton; copper and brass in USD/lb.
+enum MarketSymbol {
+  CU_COMEX      // copper, COMEX benchmark
+  CU_BARE_BRIGHT
+  CU_NO2
+  BRASS_YELLOW
+  AL_EXTRUSION
+  HMS_1
+  HMS_12
+  SHRED_STEEL
+  BUSHELING
+  SS_304
+}
+
+enum EventCategory {
+  POLICY
+  SUPPLY
+  DEMAND
+  INVENTORY
+  MACRO
+  FORECAST
+}
+
+model PriceSeries {
+  id          String       @id @default(cuid())
+  symbol      MarketSymbol @unique
+  label       String
+  unit        QuoteUnit
+  source      PriceSource  @default(SAMPLE)
+  // benchmark series drive derived grades; grades reference their benchmark
+  benchmarkOf MarketSymbol?
+  ticks       PriceTick[]
+  events      MarketEvent[]
+  forecasts   PriceForecast[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PriceTick {
+  id       String      @id @default(cuid())
+  seriesId String
+  series   PriceSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  // date is the settlement day; time-of-day is not meaningful here
+  date     DateTime    @db.Date
+  close    Float
+  // point-in-time discipline: when we learned this print, so a
+  // backtest can never see a revision before it was published
+  observedAt DateTime  @default(now())
+
+  @@unique([seriesId, date])
+  @@index([seriesId, date])
+}
+
+model MarketEvent {
+  id        String        @id @default(cuid())
+  seriesId  String
+  series    PriceSeries   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  date      DateTime      @db.Date
+  category  EventCategory
+  headline  String
+  body      String
+  // signed price impact on the day, percent, e.g. -3.1
+  impactPct Float?
+  sourceName String
+  sourceUrl  String?
+  createdAt DateTime      @default(now())
+
+  @@index([seriesId, date])
+}
+
+model PriceForecast {
+  id        String      @id @default(cuid())
+  seriesId  String
+  series    PriceSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  // the day the forecast was made — everything after is out-of-sample
+  runDate   DateTime    @db.Date
+  horizonD  Int
+  targetDate DateTime   @db.Date
+  p10       Float
+  p25       Float
+  p50       Float
+  p75       Float
+  p90       Float
+  // which estimator produced this, so a naive baseline is never
+  // silently presented as a trained model
+  method    String      @default("random-walk-drift")
+  createdAt DateTime    @default(now())
+
+  @@unique([seriesId, runDate, targetDate])
+  @@index([seriesId, runDate])
+}
