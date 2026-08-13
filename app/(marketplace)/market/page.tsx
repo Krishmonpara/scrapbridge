@@ -166,8 +166,8 @@ export default async function MarketPage() {
           {copper && ticks.length > 1 && (
             <section className="mb-12">
               <SectionHead title={`Why it moved — ${copper.label}`}>
-                What the price did over the last {ticks.length} sessions, and the dated events behind
-                each move.
+                What the price did, and the dated events behind each move. The chart carries its own
+                window; the figures below cover the full {ticks.length}-session history.
               </SectionHead>
 
               <div style={card}>
