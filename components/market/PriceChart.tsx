@@ -13,6 +13,17 @@ interface Props {
   label: string
 }
 
+/**
+ * Selectable history windows, in trading sessions. 90 is the default: over the
+ * full 180 the annotated events bunch against the right edge and the recent
+ * move — the part a dealer is actually trading against — loses all resolution.
+ */
+const RANGES = [
+  { label: '30D', sessions: 30 },
+  { label: '90D', sessions: 90 },
+  { label: 'ALL', sessions: Infinity },
+] as const
+
 const PAD = { t: 26, r: 68, b: 34, l: 58 }
 
 function fmtDate(iso: string) {
@@ -24,11 +35,17 @@ function fmtDate(iso: string) {
 // Annotated price history. Event markers are numbered rather than colour-coded:
 // the numeral carries identity, so the up/down tint is redundant reinforcement
 // (the up/down token pair sits in the CVD warn band and can't carry meaning alone).
-export function PriceChart({ ticks, events = [], unit, height = 330, label }: Props) {
+export function PriceChart({ ticks: allTicks, events = [], unit, height = 330, label }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(880)
   const [active, setActive] = useState<number | null>(null)
   const [showTable, setShowTable] = useState(false)
+  const [rangeIdx, setRangeIdx] = useState(1) // default 90D
+
+  const ticks = useMemo(() => {
+    const n = RANGES[rangeIdx].sessions
+    return n === Infinity ? allTicks : allTicks.slice(-n)
+  }, [allTicks, rangeIdx])
 
   useEffect(() => {
     const el = wrapRef.current
@@ -292,6 +309,28 @@ export function PriceChart({ ticks, events = [], unit, height = 330, label }: Pr
       </div>
 
       <div className="flex flex-wrap items-center gap-3 px-5 pb-4">
+        <div className="flex items-center gap-1" role="group" aria-label="History window">
+          {RANGES.map((r, i) => (
+            <button
+              key={r.label}
+              type="button"
+              onClick={() => {
+                setRangeIdx(i)
+                setActive(null) // the index refers to the old slice
+              }}
+              aria-pressed={rangeIdx === i}
+              className="border px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              style={{
+                borderColor: rangeIdx === i ? 'var(--accent)' : 'var(--border)',
+                color: rangeIdx === i ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                background: rangeIdx === i ? 'var(--bg-tertiary)' : 'transparent',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
         <span
           className="text-[11px] uppercase tracking-[0.14em]"
           style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}

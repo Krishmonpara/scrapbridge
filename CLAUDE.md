@@ -491,7 +491,8 @@ NEXTAUTH_URL="http://localhost:3000"
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ⬜ | Google OAuth (never set; credentials login works without) |
 
 **Not yet added but referenced by flags/future work:** `STRIPE_SECRET_KEY` /
-`STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` (escrow), `METALS_API_KEY` (live
+`STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` (escrow), `CRON_SECRET` (guards
+`/api/cron/prices`; the route fails closed if unset), `METALS_API_KEY` (live
 prices), `RESEND_API_KEY` / Twilio creds (notifications), `UPSTASH_REDIS_REST_URL` +
 `UPSTASH_REDIS_REST_TOKEN` (distributed rate limiting).
 
@@ -600,9 +601,14 @@ never blocked:
 2. **Google OAuth creds** — need `GOOGLE_CLIENT_ID`/`SECRET`. Google button exists but
    errors; credentials login works. (Add `http://localhost:3000/api/auth/callback/google`
    as an authorized redirect URI.)
-3. **Live metal price feed** — `price-intelligence.ts` uses a **static** spot snapshot.
-   Plug in LME API (paid), metals-api.com (free 50 req/mo → daily cron), or scrape MSTC;
-   needs `METALS_API_KEY`.
+3. **Live metal price feed** — *loader now built; needs only a key.* `lib/market/feed.ts`
+   pulls metals-api.com quotes and upserts `PriceTick` rows with `source = FEED`;
+   `/api/cron/prices` runs it daily (schedule in `vercel.json`, 07:00 UTC). Set
+   **`METALS_API_KEY`** and **`CRON_SECRET`** in Vercel to switch the market pages off
+   sample data — no code change needed, because `source` travels with the series and the
+   "sample data" banner keys off it. Without the key, ingestion is a no-op and sample
+   data keeps serving. Note `price-intelligence.ts` still uses its own **static** spot
+   snapshot for the Fair Price badge; pointing it at `PriceTick` is the follow-up.
 4. **Email / WhatsApp notifications** — match alerts + messages are in-app only. Add
    `RESEND_API_KEY` (email, free 100/day — fastest path) and/or Twilio (WhatsApp).
 5. **Verification document review** — request flow sets companies to PENDING; approving

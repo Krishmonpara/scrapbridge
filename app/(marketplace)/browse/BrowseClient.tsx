@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { LayoutGrid, List, SlidersHorizontal, X, PackageSearch } from 'lucide-react'
 import { ListingGrid } from '@/components/listings/ListingGrid'
@@ -30,6 +31,23 @@ export function BrowseClient() {
     listingType: (params.get('type') as any) ?? undefined,
     sortBy: 'newest',
   }))
+
+  // Whether anything is actually narrowing the result set. Drives the empty
+  // state's "Clear all filters" affordance — offering it with nothing set
+  // would be a dead button.
+  const hasFilters = Boolean(
+    filters.search ||
+      filters.materialCategory ||
+      filters.listingType ||
+      filters.state ||
+      filters.verifiedOnly ||
+      filters.postedWithin ||
+      filters.condition?.length
+  )
+
+  const clearFilters = useCallback(() => {
+    setFilters({ sortBy: 'newest' })
+  }, [])
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
@@ -214,9 +232,9 @@ export function BrowseClient() {
               ))}
             </div>
           ) : viewMode === 'list' ? (
-            <ListingListView listings={listings} />
+            <ListingListView listings={listings} onClearFilters={hasFilters ? clearFilters : undefined} />
           ) : (
-            <ListingGrid listings={listings} />
+            <ListingGrid listings={listings} onClearFilters={hasFilters ? clearFilters : undefined} />
           )}
         </div>
       </div>
@@ -224,13 +242,43 @@ export function BrowseClient() {
   )
 }
 
-function ListingListView({ listings }: { listings: any[] }) {
+function ListingListView({
+  listings,
+  onClearFilters,
+}: {
+  listings: any[]
+  onClearFilters?: () => void
+}) {
   if (listings.length === 0) {
     return (
       <EmptyState
         icon={PackageSearch}
         title="No listings found"
-        description="Nothing matched these filters. Try clearing a filter or broadening the search term."
+        description={
+          onClearFilters
+            ? 'Your filters are narrower than the current supply.'
+            : 'Nothing is listed here yet.'
+        }
+        action={
+          onClearFilters ? (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="px-4 py-2 text-sm font-medium border transition-colors text-[var(--text-primary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            >
+              Clear all filters
+            </button>
+          ) : undefined
+        }
+        secondaryAction={
+          <Link
+            href="/post-listing"
+            className="px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            style={{ background: 'var(--foreground)', color: 'var(--background)' }}
+          >
+            Post a listing
+          </Link>
+        }
       />
     )
   }

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { PackageSearch } from 'lucide-react'
 import { ListingCard } from './ListingCard'
@@ -13,6 +14,11 @@ interface ListingGridProps {
       slug: string
     }
   })[]
+  /**
+   * Clears every active filter. Supplied when at least one filter is set, so
+   * the empty state can offer a way out instead of only describing the problem.
+   */
+  onClearFilters?: () => void
 }
 
 const container = {
@@ -28,7 +34,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const } },
 }
 
-export function ListingGrid({ listings }: ListingGridProps) {
+export function ListingGrid({ listings, onClearFilters }: ListingGridProps) {
   if (listings.length === 0) {
     return (
       <motion.div
@@ -41,7 +47,29 @@ export function ListingGrid({ listings }: ListingGridProps) {
           <PackageSearch size={26} className="text-[var(--text-tertiary)]" />
         </div>
         <p className="text-[var(--text-secondary)] text-base mb-1.5 font-medium">No listings found</p>
-        <p className="text-[var(--text-tertiary)] text-sm">Try removing a filter or broadening your search</p>
+        <p className="text-[var(--text-tertiary)] text-sm">
+          {onClearFilters
+            ? 'Your filters are narrower than the current supply.'
+            : 'Nothing is listed here yet.'}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-5">
+          {onClearFilters && (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="px-4 py-2 text-sm font-medium border transition-colors text-[var(--text-primary)] border-[var(--border)] hover:bg-[var(--bg-tertiary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            >
+              Clear all filters
+            </button>
+          )}
+          <Link
+            href="/post-listing"
+            className="px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            style={{ background: 'var(--foreground)', color: 'var(--background)' }}
+          >
+            Post a listing
+          </Link>
+        </div>
       </motion.div>
     )
   }
