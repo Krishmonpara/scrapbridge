@@ -230,6 +230,10 @@ export function Navbar() {
               className="flex items-center gap-2 h-8 px-3 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors duration-150"
               onClick={() => setSearchOpen((o) => !o)}
               title="Search (⌘K)"
+              // The "Search" label is hidden below xl, so without this the
+              // control is an unlabelled icon for most viewports.
+              aria-label="Search"
+              aria-expanded={searchOpen}
             >
               <Search size={14} />
               <span className="hidden xl:flex items-center gap-1 text-xs">
@@ -364,6 +368,9 @@ export function Navbar() {
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen((o) => !o)}
+              aria-label="Account menu"
+              aria-expanded={userMenuOpen}
+              aria-haspopup="menu"
               className="w-8 h-8 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
             >
               <User size={16} />
@@ -420,6 +427,8 @@ export function Navbar() {
         <button
           className="ml-auto lg:hidden w-8 h-8 flex items-center justify-center text-[var(--text-secondary)]"
           onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={mobileOpen}
         >
           <Menu size={20} />
         </button>
@@ -446,7 +455,7 @@ export function Navbar() {
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="font-semibold text-[var(--text-primary)]">ScrapBridge</span>
-                <button onClick={() => setMobileOpen(false)}>
+                <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
                   <X size={20} className="text-[var(--text-tertiary)]" />
                 </button>
               </div>

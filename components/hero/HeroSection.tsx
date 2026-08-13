@@ -116,7 +116,12 @@ export function HeroSection() {
           </span>
 
           {/* Headline */}
-          <h1 className="font-bold leading-tight" style={{ fontSize: 'clamp(40px, 6vw, 72px)' }}>
+          {/* 40px was too large a floor: on a 375px screen the headline broke
+              across five lines. Balanced wrapping keeps the two clauses intact. */}
+          <h1
+            className="font-bold leading-tight"
+            style={{ fontSize: 'clamp(32px, 6vw, 72px)', textWrap: 'balance' }}
+          >
             <span className="text-[var(--text-primary)]">Every Part Has Value.</span>
             <br />
             <span style={{ color: 'var(--accent)' }}>Find. List. Trade.</span>
@@ -133,8 +138,10 @@ export function HeroSection() {
 
           {/* Search bar */}
           <div className="w-full max-w-2xl flex flex-col gap-3">
+            {/* Stacks on mobile: side-by-side, the button left ~230px for the
+                input and the placeholder truncated mid-word. */}
             <div
-              className="flex items-center w-full overflow-hidden"
+              className="flex flex-col sm:flex-row sm:items-center w-full overflow-hidden"
               style={{
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-accent)',
@@ -142,18 +149,24 @@ export function HeroSection() {
                 boxShadow: '0 0 40px rgba(255,255,255,0.08)',
               }}
             >
-              <Search size={18} className="ml-4 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
-                placeholder="Search by material, grade, equipment type or location..."
-                className="flex-1 h-12 px-3 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-sm focus:outline-none"
-              />
+              <div className="flex items-center flex-1 min-w-0">
+                <Search size={18} className="ml-4 shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+                <label htmlFor="hero-search" className="sr-only">
+                  Search listings
+                </label>
+                <input
+                  id="hero-search"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
+                  placeholder="Search by material, grade, equipment type or location..."
+                  className="flex-1 min-w-0 h-12 px-3 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-sm focus:outline-none"
+                />
+              </div>
               <button
                 onClick={() => handleSearch(query)}
-                className="h-12 px-6 text-sm font-semibold shrink-0 cursor-pointer active:scale-[0.98] transition-all duration-150"
+                className="h-12 px-6 text-sm font-semibold shrink-0 cursor-pointer active:scale-[0.98] transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                 style={{ background: 'var(--foreground)', color: 'var(--background)' }}
               >
                 Search
