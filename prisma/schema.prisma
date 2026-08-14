@@ -112,6 +112,8 @@ model Company {
   reviewsGiven      Review[]    @relation("ReviewFrom")
   reviewsReceived   Review[]    @relation("ReviewTo")
   users             User[]
+  inventoryLots     InventoryLot[]
+  positionSnapshots PositionSnapshot[]
 }
 
 model Listing {
@@ -400,4 +402,58 @@ model PriceForecast {
 
   @@unique([seriesId, runDate, targetDate])
   @@index([seriesId, runDate])
+}
+
+// ============================================================
+// POSITION — mark-to-market inventory
+// A dealer's own stockpile, valued against the price series. This is
+// commercially sensitive: lots are company-scoped everywhere and must never
+// appear in public aggregates (/api/public/prices, the widget, or the market
+// page's supply table).
+// ============================================================
+
+enum LotStatus {
+  HELD
+  LISTED
+  SOLD
+}
+
+model InventoryLot {
+  id         String       @id @default(cuid())
+  companyId  String
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // ties the lot to a priced series; valuation is impossible without it
+  symbol     MarketSymbol
+  // the dealer's own name for the pile, e.g. "Bin 4 - radiators"
+  label      String?
+  quantity   Float
+  unit       Unit
+  // per unit, USD. Optional on purpose: without it we show market value and
+  // no P&L, rather than inventing a cost the dealer never entered.
+  costBasis  Float?
+  acquiredAt DateTime     @default(now())
+  status     LotStatus    @default(HELD)
+  // set when the lot is listed on the marketplace — the inventory->supply bridge
+  listingId  String?
+  notes      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([companyId, status])
+}
+
+model PositionSnapshot {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  date          DateTime @db.Date
+  marketValue   Float
+  costBasis     Float
+  unrealizedPnl Float
+  createdAt     DateTime @default(now())
+
+  // Stored rather than recomputed: an equity curve derived on the fly would
+  // silently rewrite history whenever a dealer edits a lot's cost basis.
+  @@unique([companyId, date])
+  @@index([companyId, date])
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 // Routes that require authentication
-const PROTECTED = ['/dashboard', '/my-listings', '/post-listing', '/settings', '/inquiries']
+const PROTECTED = ['/dashboard', '/my-listings', '/post-listing', '/settings', '/inquiries', '/position']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
