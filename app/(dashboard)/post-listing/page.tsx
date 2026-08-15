@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Check, ChevronRight, ChevronLeft, Upload, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { Navbar } from '@/components/navigation/Navbar'
@@ -295,12 +295,23 @@ export default function PostListingPage() {
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
+          {/*
+            No AnimatePresence here on purpose. With `mode="wait"` the incoming
+            step is gated on the outgoing one finishing its exit animation; when
+            that exit never completes the new step never mounts and the old one
+            is left stranded at opacity 0 — which made every step after the
+            first render blank, so a listing could not be posted at all.
+
+            `initial={false}` is the other half of the fix: the panel paints at
+            its animated values immediately, so a stalled animation can never
+            leave the form invisible again. The slide is a flourish; the form
+            working is not.
+          */}
+          <div>
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 20 }}
+              initial={false}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
               className="p-6 rounded"
               style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
@@ -592,7 +603,7 @@ export default function PostListingPage() {
                 </div>
               )}
             </motion.div>
-          </AnimatePresence>
+          </div>
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-6">

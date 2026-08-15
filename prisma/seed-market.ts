@@ -12,9 +12,16 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
+import 'dotenv/config'
 import { SAMPLE_SYMBOLS, sampleSeries } from '../lib/market/sample-data'
 
-const prisma = new PrismaClient()
+// Prisma 7 is configured for driver adapters, so a bare `new PrismaClient()`
+// throws at construction. Mirrors prisma/seed.ts.
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter } as any)
 
 async function main() {
   let seriesCount = 0
