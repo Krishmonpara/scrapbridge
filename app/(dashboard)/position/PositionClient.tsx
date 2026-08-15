@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, AlertTriangle, Tag } from 'lucide-react'
 import type { PositionView } from '@/lib/position/queries'
 import type { MarketSymbol, QuoteUnit } from '@/lib/market/types'
 import { formatQuote } from '@/lib/market/types'
@@ -254,9 +255,9 @@ export function PositionClient({ initial, choices }: { initial: PositionView; ch
           <table className="w-full text-sm" style={{ minWidth: 760 }}>
             <thead>
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                {['Lot', 'Quantity', 'Price used', 'Market value', 'Cost', 'P&L', ''].map((h) => (
+                {['Lot', 'Quantity', 'Price used', 'Market value', 'Cost', 'P&L', '', ''].map((h, i) => (
                   <th
-                    key={h}
+                    key={`${h}-${i}`}
                     className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]"
                   >
                     {h}
@@ -318,6 +319,26 @@ export function PositionClient({ initial, choices }: { initial: PositionView; ch
                       {v.unrealizedPnl !== null
                         ? `${up ? '▲ +' : '▼ −'}${usd(Math.abs(v.unrealizedPnl))}`
                         : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      {l.status === 'LISTED' ? (
+                        <span
+                          className="text-[11px] uppercase tracking-[0.1em]"
+                          style={{ ...mono, color: 'var(--text-tertiary)' }}
+                        >
+                          Listed
+                        </span>
+                      ) : (
+                        // Carries only the lot id; the wizard re-fetches the
+                        // values through the company-scoped endpoint.
+                        <Link
+                          href={`/post-listing?lot=${l.id}`}
+                          className="inline-flex items-center gap-1.5 border px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] transition-colors hover:bg-[var(--bg-tertiary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                          style={{ ...mono, borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                        >
+                          <Tag size={12} /> List
+                        </Link>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

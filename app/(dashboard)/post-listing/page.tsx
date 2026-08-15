@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { MaterialIcon } from '@/components/shared/MaterialIcon'
 import { CATEGORY_LABELS, MaterialCategory } from '@/types'
+import { SYMBOL_LISTING_DEFAULTS, suggestListingTitle } from '@/lib/position/symbol-map'
+import type { MarketSymbol } from '@/lib/market/types'
 
 const LISTING_TYPES = [
   { value: 'SELL', label: 'Selling', desc: 'I have materials to sell' },
@@ -55,6 +57,9 @@ export default function PostListingPage() {
   const [submitError, setSubmitError] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [demoCompanyId, setDemoCompanyId] = useState<string | null>(null)
+  // set when the wizard was opened from an inventory lot; used to mark that
+  // lot LISTED once the listing actually exists
+  const [fromLotId, setFromLotId] = useState<string | null>(null)
   const [quality, setQuality] = useState<{ score: number; grade: string; suggestions: string[] } | null>(null)
 
   const [formData, setFormData] = useState<Record<string, string>>({})
@@ -68,6 +73,37 @@ export default function PostListingPage() {
         if (first?.id) setDemoCompanyId(first.id)
       })
       .catch(() => {})
+  }, [])
+
+  // Prefill from an inventory lot (`/post-listing?lot=<id>`). Only the id
+  // travels in the URL — the values come from the company-scoped endpoint, so
+  // a guessed id yields nothing rather than another dealer's holdings.
+  useEffect(() => {
+    const lotId = new URLSearchParams(window.location.search).get('lot')
+    if (!lotId) return
+    let alive = true
+    fetch(`/api/inventory/${lotId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((lot) => {
+        if (!alive || !lot?.symbol) return
+        const d = SYMBOL_LISTING_DEFAULTS[lot.symbol as MarketSymbol]
+        setFromLotId(lot.id)
+        setListingType('SELL')
+        if (d) setCategory(d.category)
+        setUnit(lot.unit)
+        // Everything below is a starting point, not a commitment: the dealer
+        // still walks every step and can change any of it before submitting.
+        setFormData((f) => ({
+          ...f,
+          title: suggestListingTitle(lot.symbol as MarketSymbol, lot.quantity, lot.unit),
+          grade: d?.grade ?? '',
+          quantity: String(lot.quantity),
+        }))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
   }, [])
 
   const validate = (currentStep: number): boolean => {
@@ -141,6 +177,19 @@ export default function PostListingPage() {
 
       const created = await res.json().catch(() => null)
       if (created?.quality) setQuality(created.quality)
+
+      // Link the lot to the listing it became. Deliberately after the listing
+      // exists and deliberately non-fatal: if this fails the dealer still has
+      // their listing, and a lot stuck on HELD is a far better outcome than
+      // losing the submission over a bookkeeping update.
+      if (fromLotId && created?.id) {
+        await fetch(`/api/inventory/${fromLotId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'LISTED', listingId: created.id }),
+        }).catch(() => {})
+      }
+
       setSubmitted(true)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit listing. Please try again.')
