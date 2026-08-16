@@ -14,6 +14,16 @@ import { prisma } from '@/lib/prisma'
 import { HorizontalScroll } from '@/components/ui/HorizontalScroll'
 import { ArrowRight, Package, TrendingUp } from 'lucide-react'
 
+/**
+ * The homepage reads live listings, so it must not be prerendered. Without
+ * this it built as a static page (`○` in the route table) with no revalidate,
+ * baking in whatever the database returned during `next build` and serving
+ * that forever. On a deploy where the build cannot reach the database — which
+ * is every first deploy, before DATABASE_URL is set — that meant a homepage
+ * permanently frozen with no listings.
+ */
+export const dynamic = 'force-dynamic'
+
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [MaterialCategory, string][]
 
 const HOW_IT_WORKS = [
